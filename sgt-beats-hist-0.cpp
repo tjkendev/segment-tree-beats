@@ -13,6 +13,7 @@ using ll = long long;
 // - l<=i<r の A_i の和を求める
 // - l<=i<r の中の B_i の最大値を求める
 // - (各クエリ後、B_i は max(A_i, B_i) に更新)
+// TODO: chminとaddの繰り返しによる最大値更新を正しく行う
 
 #define N 10003
 
@@ -37,6 +38,15 @@ class SegmentTreeBeats {
     void change(Val &v) {
       vl = v.vl; ma = max(ma, v.ma); mi = min(mi, v.mi);
     }
+    void chmin(ll x) {
+      ma = min(ma, x);
+      mi = min(mi, x);
+      vl = min(vl, x);
+    }
+    void chmin(Val &v) {
+      ma = min(ma, v.ma);
+      vl = v.vl;
+    }
 
     string print() {
       stringstream ss;
@@ -46,7 +56,7 @@ class SegmentTreeBeats {
   };
   int n, n0;
   Val max_v[4*N], smax_v[4*N];
-  ll hmax[4*N];
+  ll hmax_v[4*N];
   ll sum[4*N], cnt[4*N];
   ll ecnt[4*N];
   Val lval[4*N], ladd[4*N];
@@ -69,25 +79,23 @@ class SegmentTreeBeats {
 
     if(max_v[k].vl < max_v[2*k+1].vl) {
       sum[2*k+1] += (max_v[k].vl - max_v[2*k+1].vl) * cnt[2*k+1];
-      max_v[2*k+1].change(max_v[k].vl);
+      max_v[2*k+1].chmin(max_v[k]);
+      hmax_v[2*k+1] = max(hmax_v[2*k+1], max_v[2*k+1].vl);
 
       if(lval[2*k+1].vl != inf && max_v[k].vl < lval[2*k+1].vl) {
-        lval[2*k+1].change(max_v[k].vl);
+        lval[2*k+1].chmin(max_v[k].vl);
       }
     }
     if(max_v[k].vl < max_v[2*k+2].vl) {
       sum[2*k+2] += (max_v[k].vl - max_v[2*k+2].vl) * cnt[2*k+2];
-      max_v[2*k+2].change(max_v[k].vl);
+      max_v[2*k+2].chmin(max_v[k].vl);
+      hmax_v[2*k+2] = max(hmax_v[2*k+2], max_v[2*k+2].vl);
 
       if(lval[2*k+2].vl != inf && max_v[k].vl < lval[2*k+2].vl) {
-        lval[2*k+2].change(max_v[k].vl);
+        lval[2*k+2].chmin(max_v[k].vl);
       }
     }
 
-    if(ladd[k].vl != 0) {
-      max_v[2*k+1].ma = max(max_v[2*k+1].ma, max_v[2*k+1].vl);
-      max_v[2*k+2].ma = max(max_v[2*k+2].ma, max_v[2*k+2].vl);
-    }
     ladd[k].set(0);
   }
 
@@ -106,6 +114,7 @@ class SegmentTreeBeats {
       smax_v[k].vl = max(smax_v[2*k+1].vl, smax_v[2*k+2].vl);
     }
     max_v[k].ma = max(max_v[2*k+1].ma, max_v[2*k+2].ma);
+    hmax_v[k] = max(hmax_v[k], max_v[k].vl);
   }
 
   void _update_min(ll x, int a, int b, int k, int l, int r) {
@@ -114,10 +123,11 @@ class SegmentTreeBeats {
     }
     if(a <= l && r <= b && smax_v[k].vl < x) {
       sum[k] += (x - max_v[k].vl) * cnt[k];
-      max_v[k].change(x);
+      max_v[k].chmin(x);
+      hmax_v[k] = max(hmax_v[k], max_v[k].vl);
 
       if(lval[k].vl != inf && x < lval[k].vl) {
-        lval[k].change(x);
+        lval[k].chmin(x);
       }
       return;
     }
@@ -157,7 +167,8 @@ class SegmentTreeBeats {
   void addall(int k, Val x) {
     printf("addall(%d, %s), max_v[k] = %s\n", k, x.print().c_str(), max_v[k].print().c_str());
     //max_v[k].ma = max(max_v[k].ma, max_v[k].vl + x.vl);
-    max_v[k].vl += x.vl;
+    //hmax_v[k] = max(hmax_v[k], min(max_v[k].ma, max_v[k].vl + x.ma));
+    max_v[k].vl = min(max_v[k].ma, max_v[k].vl + x.vl);
 
     if(smax_v[k].vl != -inf) smax_v[k].vl += x.vl;
 
@@ -173,6 +184,7 @@ class SegmentTreeBeats {
   void updateall(int k, Val x, Val a) {
     max_v[k].add(a);
     max_v[k].change(x);
+    hmax_v[k] = max(hmax_v[k], max_v[k].vl);
 
     smax_v[k].vl = -inf;
     cnt[k] = ecnt[k];
@@ -194,7 +206,6 @@ class SegmentTreeBeats {
     }
     if(a <= l && r <= b) {
       addall(k, Val(x));
-      max_v[k].ma = max(max_v[k].ma, max_v[k].vl);
       return;
     }
 
@@ -224,7 +235,7 @@ class SegmentTreeBeats {
       return -inf;
     }
     if(a <= l && r <= b) {
-      return max_v[k].ma;
+      return hmax_v[k];
     }
     push(k);
     ll lv = _query_hmax(a, b, 2*k+1, l, (l+r)/2);
@@ -243,7 +254,7 @@ class SegmentTreeBeats {
 
     if(a != nullptr) {
       for(int i=0; i<n; ++i) {
-        sum[n0-1+i] = a[i];
+        hmax_v[n0-1+i] = sum[n0-1+i] = a[i];
         max_v[n0-1+i].set(a[i]);
         smax_v[n0-1+i].vl = -inf;
         cnt[n0-1+i] = 1;
@@ -254,7 +265,7 @@ class SegmentTreeBeats {
       }
     } else {
       for(int i=0; i<n; ++i) {
-        sum[n0-1+i] = 0;
+        hmax_v[n0-1+i] = sum[n0-1+i] = 0;
         max_v[n0-1+i].set(0);
         smax_v[n0-1+i].vl = -inf;
         cnt[n0-1+i] = 1;
@@ -265,16 +276,17 @@ class SegmentTreeBeats {
       }
     }
     for(int i=n; i<n0; ++i) {
-      sum[n0-1+i] = 0;
+      hmax_v[n0-1+i] = -inf;
       max_v[n0-1+i].set(-inf);
       smax_v[n0-1+i].vl = -inf;
-      cnt[n0-1+i] = 0;
+      cnt[n0-1+i] = sum[n0-1+i] = 0;
 
       lval[n0-1+i].set(inf);
       ladd[n0-1+i].set(0);
       ecnt[n0-1+i] = 0;
     }
     for(int i=n0-2; i>=0; i--) {
+      hmax_v[n0-1+i] = -inf;
       ecnt[i] = ecnt[2*i+1] + ecnt[2*i+2];
       lval[i].set(inf);
       ladd[i].set(0);
@@ -447,7 +459,7 @@ int main() {
       //stb.print();
       stb.debug();
     }
-    if(wrong) break;
+    if(!ipt && wrong) break;
   }
   return 0;
 }
