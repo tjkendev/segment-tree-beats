@@ -5,7 +5,9 @@
 
 ## ソースコードの説明
 
-### `sgt-beats-0.cpp`
+### 区間最大値(最小値)クエリ
+
+#### `sgt-beats-0.cpp`
 
 - range chmin query
 - range maximum query
@@ -13,7 +15,7 @@
 
 計算量: O(M log N)
 
-### `sgt-beats-1.cpp`
+#### `sgt-beats-1.cpp`
 
 - range chmin query
 - range chmax query
@@ -23,7 +25,7 @@
 
 計算量: O(M log^2 N)
 
-### `sgt-beats-2.cpp`
+#### `sgt-beats-2.cpp`
 
 - range chmin query
 - range chmax query
@@ -34,7 +36,7 @@
 
 計算量: O(M log^2 N)
 
-### `sgt-beats-3.cpp`
+#### `sgt-beats-3.cpp`
 
 - range chmin query
 - range chmax query
@@ -46,7 +48,9 @@
 
 計算量: O(M log^2 N)
 
-### `sgt-hist-0.cpp`
+### 区間過去最大値(最小値)クエリ
+
+#### `sgt-hist-0.cpp`
 
 これは普通の遅延セグ木
 
@@ -55,6 +59,20 @@
 - range maximum query
 - range sum query
 - range histric maximum query
+
+計算量: O(M log N)
+
+#### `sgt-hist-1.cpp`
+
+これも普通の遅延セグ木
+
+- range update query
+- range add query
+- range maximum query
+- range minimum query
+- range sum query
+- range histric maximum query
+- range histric minimum query
 
 計算量: O(M log N)
 
