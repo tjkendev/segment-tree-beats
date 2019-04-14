@@ -1,8 +1,11 @@
-# Implementation of Segment Tree Beats
+# "Segment Tree Beats" の実装
 
-"Segment Tree Beats" の実装
+- 各プログラムで、ランダム生成されたクエリによるテストを実行します
+- 学習のための実装なので、無駄実装がちょこちょこあります
 
-## `sgt-beats-0.cpp`
+## ソースコードの説明
+
+### `sgt-beats-0.cpp`
 
 - range chmin query
 - range maximum query
@@ -10,7 +13,7 @@
 
 計算量: O(M log N)
 
-## `sgt-beats-1.cpp`
+### `sgt-beats-1.cpp`
 
 - range chmin query
 - range chmax query
@@ -20,7 +23,7 @@
 
 計算量: O(M log^2 N)
 
-## `sgt-beats-2.cpp`
+### `sgt-beats-2.cpp`
 
 - range chmin query
 - range chmax query
@@ -31,7 +34,7 @@
 
 計算量: O(M log^2 N)
 
-## `sgt-beats-3.cpp`
+### `sgt-beats-3.cpp`
 
 - range chmin query
 - range chmax query
@@ -43,7 +46,7 @@
 
 計算量: O(M log^2 N)
 
-## `sgt-beats-hist-0.cpp`
+### `sgt-beats-hist-0.cpp`
 
 - range update query
 - range add query
