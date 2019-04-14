@@ -5,7 +5,7 @@
 using namespace std;
 using ll = long long;
 
-// Segment Tree Beats
+// Segment Tree (with histric information)
 // - l<=i<r について、 A_i の値を x に更新
 // - l<=i<r について、 A_i の値に x を加える
 // - l<=i<r の中の A_i の最大値を求める
@@ -15,7 +15,7 @@ using ll = long long;
 
 #define N 10003
 
-class SegmentTreeBeats {
+class SegmentTree {
   const ll inf = 1e18;
 
   struct Val {
@@ -32,6 +32,10 @@ class SegmentTreeBeats {
       mi = min(mi, vl + v.mi);
       vl += v.vl;
     }
+    void update(Val &x, Val &a) {
+      ma = max(ma, max(vl + a.ma, x.ma));
+      vl = x.vl;
+    }
     void change(ll x) { add(x - vl); }
     void change(Val &v) {
       vl = v.vl; ma = max(ma, v.ma); mi = min(mi, v.mi);
@@ -44,9 +48,8 @@ class SegmentTreeBeats {
     }
   };
   int n, n0;
-  Val max_v[4*N], smax_v[4*N];
-  ll sum[4*N], cnt[4*N];
-  ll ecnt[4*N];
+  Val max_v[4*N];
+  ll sum[4*N], num[4*N];
   Val lval[4*N], ladd[4*N];
 
   void push(int k) {
@@ -71,16 +74,6 @@ class SegmentTreeBeats {
     sum[k] = sum[2*k+1] + sum[2*k+2];
 
     max_v[k].vl = max(max_v[2*k+1].vl, max_v[2*k+2].vl);
-    if(max_v[2*k+1].vl < max_v[2*k+2].vl) {
-      cnt[k] = cnt[2*k+2];
-      smax_v[k].vl = max(max_v[2*k+1].vl, smax_v[2*k+2].vl);
-    } else if(max_v[2*k+1].vl > max_v[2*k+2].vl) {
-      cnt[k] = cnt[2*k+1];
-      smax_v[k].vl = max(smax_v[2*k+1].vl, max_v[2*k+2].vl);
-    } else {
-      cnt[k] = cnt[2*k+1] + cnt[2*k+2];
-      smax_v[k].vl = max(smax_v[2*k+1].vl, smax_v[2*k+2].vl);
-    }
     max_v[k].ma = max(max_v[2*k+1].ma, max_v[2*k+2].ma);
   }
 
@@ -110,36 +103,32 @@ class SegmentTreeBeats {
     return lv + rv;
   }
 
-  void addall(int k, Val x) {
+  // a: addする値の lazy value
+  void addall(int k, Val a) {
     //printf("addall(%d, %s), max_v[k] = %s\n", k, x.print().c_str(), max_v[k].print().c_str());
-    max_v[k].add(x);
+    max_v[k].add(a);
 
-    if(smax_v[k].vl != -inf) smax_v[k].vl += x.vl;
-
-    sum[k] += ecnt[k] * x.vl;
+    sum[k] += num[k] * a.vl;
     if(lval[k].vl != inf) {
-      lval[k].ma = max(lval[k].ma, lval[k].vl + x.vl);
-      lval[k].vl += x.vl;
+      lval[k].add(a);
     } else {
-      ladd[k].add(x);
+      ladd[k].add(a);
     }
   }
 
+  // x: updateする値の lazy value
+  // a: addする値の lazy value
+  // これらの値は、"add した後に update される" 関係にある
   void updateall(int k, Val x, Val a) {
-    max_v[k].ma = max(max_v[k].ma, max(max_v[k].vl + a.ma, x.ma));
-    max_v[k].vl = x.vl;
+    max_v[k].update(x, a);
 
-    smax_v[k].vl = -inf;
-    cnt[k] = ecnt[k];
-
-    sum[k] = x.vl * ecnt[k];
+    sum[k] = x.vl * num[k];
     if(lval[k].vl == inf) {
       ladd[k].add(a);
       lval[k].ma = x.ma;
       lval[k].vl = x.vl;
     } else {
-      lval[k].ma = max(lval[k].ma, max(lval[k].vl + a.ma, x.ma));
-      lval[k].vl = x.vl;
+      lval[k].update(x, a);
     }
   }
 
@@ -187,11 +176,11 @@ class SegmentTreeBeats {
   }
 
   public:
-  SegmentTreeBeats(int n) {
-    SegmentTreeBeats(n, nullptr);
+  SegmentTree(int n) {
+    SegmentTree(n, nullptr);
   }
 
-  SegmentTreeBeats(int n, ll *a) : n(n) {
+  SegmentTree(int n, ll *a) : n(n) {
     n0 = 1;
     while(n0 < n) n0 <<= 1;
 
@@ -199,36 +188,31 @@ class SegmentTreeBeats {
       for(int i=0; i<n; ++i) {
         sum[n0-1+i] = a[i];
         max_v[n0-1+i].set(a[i]);
-        smax_v[n0-1+i].vl = -inf;
-        cnt[n0-1+i] = 1;
 
         lval[n0-1+i].set(inf);
         ladd[n0-1+i].set(0);
-        ecnt[n0-1+i] = 1;
+        num[n0-1+i] = 1;
       }
     } else {
       for(int i=0; i<n; ++i) {
         sum[n0-1+i] = 0;
         max_v[n0-1+i].set(0);
-        smax_v[n0-1+i].vl = -inf;
-        cnt[n0-1+i] = 1;
 
         lval[n0-1+i].set(inf);
         ladd[n0-1+i].set(0);
-        ecnt[n0-1+i] = 1;
+        num[n0-1+i] = 1;
       }
     }
     for(int i=n; i<n0; ++i) {
       max_v[n0-1+i].set(-inf);
-      smax_v[n0-1+i].vl = -inf;
-      cnt[n0-1+i] = sum[n0-1+i] = 0;
+      sum[n0-1+i] = 0;
 
       lval[n0-1+i].set(inf);
       ladd[n0-1+i].set(0);
-      ecnt[n0-1+i] = 0;
+      num[n0-1+i] = 0;
     }
     for(int i=n0-2; i>=0; i--) {
-      ecnt[i] = ecnt[2*i+1] + ecnt[2*i+2];
+      num[i] = num[2*i+1] + num[2*i+2];
       lval[i].set(inf);
       ladd[i].set(0);
       update(i);
@@ -275,8 +259,8 @@ class SegmentTreeBeats {
 
   void debug() {
     for(int i=0; i<2*n0; ++i) {
-      printf("* %d: mx = %s, smx = %lld, sm = %lld, ct = %lld, lvl = %s, lad = %s\n",
-          i, max_v[i].print().c_str(), smax_v[i].vl, sum[i], cnt[i],
+      printf("* %d: mx = %s, sm = %lld, lvl = %s, lad = %s\n",
+          i, max_v[i].print().c_str(), sum[i],
           lval[i].print().c_str(), ladd[i].print().c_str()
           );
     }
@@ -289,8 +273,8 @@ int main() {
   random_device rnd;
   mt19937 mt(rnd());
   uniform_int_distribution<> szrnd(100, 1000);
-  //uniform_int_distribution<ll> val(0, 1e10);
-  uniform_int_distribution<ll> val(0, 100);
+  uniform_int_distribution<ll> val(0, 1e10);
+  //uniform_int_distribution<ll> val(0, 100);
 
   bool ipt = false;
   int cs = 0;
@@ -318,9 +302,9 @@ int main() {
     ss << "\n";
     printf("=== start\n");
     for(int i=0; i<n; ++i) printf("%lld ", v[i]); printf("\n");
-    SegmentTreeBeats stb(n, v);
+    SegmentTree stb(n, v);
     int t, a, b;
-    int c = 1, d = 200;
+    int c = 1, d = 200000;
     if(ipt) {
       cin >> d;
     }
