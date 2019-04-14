@@ -46,7 +46,9 @@
 
 計算量: O(M log^2 N)
 
-### `sgt-beats-hist-0.cpp`
+### `sgt-hist-0.cpp`
+
+これは普通の遅延セグ木
 
 - range update query
 - range add query
@@ -54,4 +56,10 @@
 - range sum query
 - range histric maximum query
 
-計算量: O(M log^2 N)
+計算量: O(M log N)
+
+## 参考
+
+- [A simple introduction to "Segment tree beats"](https://codeforces.com/blog/entry/57319)
+- [Segment Tree Beats - An introduction](http://codingwithrajarshi.blogspot.com/2018/03/segment-tree-beats-introduction.html)
+- [区间最值操作与历史最值问题](http://www.doc88.com/p-6744902151779.html)
