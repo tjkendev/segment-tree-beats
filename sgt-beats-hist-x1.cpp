@@ -15,6 +15,7 @@ using ll = long long;
 // - l<=i<r について、 A_i の値を x に更新
 // - l<=i<r の中の B_i の最大値を求める
 // - (各クエリ後、B_i は max(A_i, B_i) に更新)
+// TODO: histric maximum と各クエリの遅延値の制御を正しく行う
 
 #define N 10003
 
