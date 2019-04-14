@@ -344,11 +344,14 @@ int main() {
   uniform_int_distribution<ll> val(0, 100);
 
   bool ipt = true;
+  int cs = 0;
+  if(ipt) cin >> cs;
 
-  while(1) {
+  while(!ipt || cs--) {
     int n = 4; //szrnd(mt);
     if(ipt) {
       cin >> n;
+      cout << n << endl;
     }
     uniform_int_distribution<int> rtype(0, 5), gen(0, n);
 
@@ -368,7 +371,7 @@ int main() {
     }
     bool wrong = false;
     ll x, r0, r1;
-    while(!wrong && c <= d) {
+    while((ipt || !wrong) && c <= d) {
       t = rtype(mt);
       a = gen(mt); b = gen(mt);
       x = val(mt);
