@@ -24,6 +24,37 @@ class SegmentTreeBeats {
   ll sum[4*N];
   ll ecnt[4*N], ladd[4*N], lval[4*N];
 
+  void update_node_max(int k, ll x) {
+    sum[k] += (x - max_v[k]) * max_c[k];
+
+    if(max_v[k] == min_v[k]) {
+      max_v[k] = min_v[k] = x;
+    } else if(max_v[k] == smin_v[k]) {
+      max_v[k] = smin_v[k] = x;
+    } else {
+      max_v[k] = x;
+    }
+
+    if(lval[k] != inf && x < lval[k]) {
+      lval[k] = x;
+    }
+  }
+  void update_node_min(int k, ll x) {
+    sum[k] += (x - min_v[k]) * min_c[k];
+
+    if(max_v[k] == min_v[k]) {
+      max_v[k] = min_v[k] = x;
+    } else if(smax_v[k] == min_v[k]) {
+      min_v[k] = smax_v[k] = x;
+    } else {
+      min_v[k] = x;
+    }
+
+    if(lval[k] != inf && lval[k] < x) {
+      lval[k] = x;
+    }
+  }
+
   void push(int k) {
 
     if(n0-1 <= k) return;
@@ -42,63 +73,17 @@ class SegmentTreeBeats {
     }
 
     if(max_v[k] < max_v[2*k+1]) {
-      sum[2*k+1] += (max_v[k] - max_v[2*k+1]) * max_c[2*k+1];
-
-      if(max_v[2*k+1] == min_v[2*k+1]) {
-        max_v[2*k+1] = min_v[2*k+1] = max_v[k];
-      } else if(max_v[2*k+1] == smin_v[2*k+1]) {
-        max_v[2*k+1] = smin_v[2*k+1] = max_v[k];
-      } else {
-        max_v[2*k+1] = max_v[k];
-      }
-
-      if(lval[2*k+1] != inf && max_v[k] < lval[2*k+1]) {
-        lval[2*k+1] = max_v[k];
-      }
+      update_node_max(2*k+1, max_v[k]);
     }
     if(min_v[2*k+1] < min_v[k]) {
-      sum[2*k+1] += (min_v[k] - min_v[2*k+1]) * min_c[2*k+1];
-
-      if(max_v[2*k+1] == min_v[2*k+1]) {
-        max_v[2*k+1] = min_v[2*k+1] = min_v[k];
-      } else if(smax_v[2*k+1] == min_v[2*k+1]) {
-        min_v[2*k+1] = smax_v[2*k+1] = min_v[k];
-      } else {
-        min_v[2*k+1] = min_v[k];
-      }
-      if(lval[2*k+1] != inf && lval[2*k+1] < min_v[k]) {
-        lval[2*k+1] = min_v[k];
-      }
+      update_node_min(2*k+1, min_v[k]);
     }
 
     if(max_v[k] < max_v[2*k+2]) {
-      sum[2*k+2] += (max_v[k] - max_v[2*k+2]) * max_c[2*k+2];
-
-      if(max_v[2*k+2] == min_v[2*k+2]) {
-        max_v[2*k+2] = min_v[2*k+2] = max_v[k];
-      } else if(max_v[2*k+2] == smin_v[2*k+2]) {
-        max_v[2*k+2] = smin_v[2*k+2] = max_v[k];
-      } else {
-        max_v[2*k+2] = max_v[k];
-      }
-      if(lval[2*k+2] != inf && max_v[k] < lval[2*k+2]) {
-        lval[2*k+2] = max_v[k];
-      }
+      update_node_max(2*k+2, max_v[k]);
     }
     if(min_v[2*k+2] < min_v[k]) {
-      sum[2*k+2] += (min_v[k] - min_v[2*k+2]) * min_c[2*k+2];
-
-      if(max_v[2*k+2] == min_v[2*k+2]) {
-        max_v[2*k+2] = min_v[2*k+2] = min_v[k];
-      } else if(smax_v[2*k+2] == min_v[2*k+2]) {
-        min_v[2*k+2] = smax_v[2*k+2] = min_v[k];
-      } else {
-        min_v[2*k+2] = min_v[k];
-      }
-
-      if(lval[2*k+2] != inf && lval[2*k+2] < min_v[k]) {
-        lval[2*k+2] = min_v[k];
-      }
+      update_node_min(2*k+2, min_v[k]);
     }
   }
 
@@ -139,22 +124,7 @@ class SegmentTreeBeats {
       return;
     }
     if(a <= l && r <= b && smax_v[k] < x) {
-      sum[k] += (x - max_v[k]) * max_c[k];
-      if(max_v[k] == min_v[k]) {
-        // 1
-        min_v[k] = max_v[k] = x;
-      } else if(max_v[k] == smin_v[k]) {
-        // 2
-        smin_v[k] = max_v[k] = x;
-      } else {
-        // more than 2
-        max_v[k] = x;
-      }
-
-      if(lval[k] != inf && x < lval[k]) {
-        //printf("x(%lld) -> lval[k](%lld)\n", x, lval[k]);
-        lval[k] = x;
-      }
+      update_node_max(k, x);
       return;
     }
 
@@ -169,21 +139,7 @@ class SegmentTreeBeats {
       return;
     }
     if(a <= l && r <= b && x < smin_v[k]) {
-      sum[k] += (x - min_v[k]) * min_c[k];
-      if(max_v[k] == min_v[k]) {
-        // 1
-        min_v[k] = max_v[k] = x;
-      } else if(min_v[k] == smax_v[k]) {
-        // 2
-        min_v[k] = smax_v[k] = x;
-      } else {
-        // more than 2
-        min_v[k] = x;
-      }
-      if(lval[k] != inf && lval[k] < x) {
-        //printf("x(%lld) -> lval[k](%lld)\n", x, lval[k]);
-        lval[k] = x;
-      }
+      update_node_min(k, x);
       return;
     }
 

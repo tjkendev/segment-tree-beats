@@ -185,8 +185,8 @@ public:
       }
     }
     for(int i=n; i<n0; ++i) {
-      max_v[n0-1+i] = smax_v[n0-1+i] = 0;
-      min_v[n0-1+i] = smin_v[n0-1+i] = 0;
+      max_v[n0-1+i] = smax_v[n0-1+i] = -inf;
+      min_v[n0-1+i] = smin_v[n0-1+i] = inf;
       max_c[n0-1+i] = min_c[n0-1+i] = 0;
     }
     for(int i=n0-2; i>=0; i--) update(i);
