@@ -16,13 +16,13 @@ using ll = long long;
 
 #define N 10003
 
-class SegmentTreeBeats {
+class SegmentTree {
   const ll inf = 1e18;
   int n, n0;
   ll max_v[4*N], smax_v[4*N], max_c[4*N];
   ll min_v[4*N], smin_v[4*N], min_c[4*N];
   ll sum[4*N];
-  ll ecnt[4*N], ladd[4*N], lval[4*N];
+  ll len[4*N], ladd[4*N], lval[4*N];
 
   void update_node_max(int k, ll x) {
     sum[k] += (x - max_v[k]) * max_c[k];
@@ -155,7 +155,7 @@ class SegmentTreeBeats {
     min_v[k] += x;
     if(smin_v[k] != inf) smin_v[k] += x;
 
-    sum[k] += ecnt[k] * x;
+    sum[k] += len[k] * x;
     if(lval[k] != inf) {
       lval[k] += x;
     } else {
@@ -166,13 +166,13 @@ class SegmentTreeBeats {
   void updateall(int k, ll x) {
     max_v[k] = x; smax_v[k] = -inf;
     min_v[k] = x; smin_v[k] = inf;
-    max_c[k] = min_c[k] = ecnt[k];
+    max_c[k] = min_c[k] = len[k];
 
-    sum[k] = x * ecnt[k];
+    sum[k] = x * len[k];
     lval[k] = x; ladd[k] = 0;
   }
 
-  void _add(ll x, int a, int b, int k, int l, int r) {
+  void _add_val(ll x, int a, int b, int k, int l, int r) {
     if(b <= l || r <= a) {
       return;
     }
@@ -182,8 +182,8 @@ class SegmentTreeBeats {
     }
 
     push(k);
-    _add(x, a, b, 2*k+1, l, (l+r)/2);
-    _add(x, a, b, 2*k+2, (l+r)/2, r);
+    _add_val(x, a, b, 2*k+1, l, (l+r)/2);
+    _add_val(x, a, b, 2*k+2, (l+r)/2, r);
     update(k);
   }
 
@@ -242,47 +242,32 @@ class SegmentTreeBeats {
   }
 
 public:
-  SegmentTreeBeats(int n) {
-    SegmentTreeBeats(n, nullptr);
+  SegmentTree(int n) {
+    SegmentTree(n, nullptr);
   }
 
-  SegmentTreeBeats(int n, ll *a) : n(n) {
+  SegmentTree(int n, ll *a) : n(n) {
     n0 = 1;
     while(n0 < n) n0 <<= 1;
 
-    if(a != nullptr) {
-      for(int i=0; i<n; ++i) {
-        max_v[n0-1+i] = min_v[n0-1+i] = sum[n0-1+i] = a[i];
-        smax_v[n0-1+i] = -inf;
-        smin_v[n0-1+i] = inf;
-        max_c[n0-1+i] = min_c[n0-1+i] = 1;
+    for(int i=0; i<2*n0; ++i) ladd[i] = 0, lval[i] = inf;
+    len[0] = n0;
+    for(int i=0; i<n0-1; ++i) len[2*i+1] = len[2*i+2] = (len[i] >> 1);
 
-        ecnt[n0-1+i] = 1; ladd[n0-1+i] = 0;
-        lval[n0-1+i] = inf;
-      }
-    } else {
-      for(int i=n; i<n0; ++i) {
-        max_v[n0-1+i] = min_v[n0-1+i] = sum[n0-1+i] = 0;
-        smax_v[n0-1+i] = -inf;
-        smin_v[n0-1+i] = inf;
-        max_c[n0-1+i] = min_c[n0-1+i] = 1;
-
-        ecnt[n0-1+i] = 1; ladd[n0-1+i] = 0;
-        lval[n0-1+i] = inf;
-      }
+    for(int i=0; i<n; ++i) {
+      max_v[n0-1+i] = min_v[n0-1+i] = sum[n0-1+i] = (a != nullptr ? a[i] : 0);
+      smax_v[n0-1+i] = -inf;
+      smin_v[n0-1+i] = inf;
+      max_c[n0-1+i] = min_c[n0-1+i] = 1;
     }
-    for(int i=n; i<n0; ++i) {
-      max_v[n0-1+i] = smax_v[n0-1+i] = 0;
-      min_v[n0-1+i] = smin_v[n0-1+i] = 0;
-      max_c[n0-1+i] = min_c[n0-1+i] = 0;
 
-      ecnt[n0-1+i] = ladd[n0-1+i] = 0;
-      lval[n0-1+i] = inf;
+    for(int i=n; i<n0; ++i) {
+      max_v[n0-1+i] = smax_v[n0-1+i] = -inf;
+      min_v[n0-1+i] = smin_v[n0-1+i] = inf;
+      max_c[n0-1+i] = min_c[n0-1+i] = 0;
     }
     for(int i=n0-2; i>=0; i--) {
       update(i);
-      ecnt[i] = ecnt[2*i+1] + ecnt[2*i+2];
-      ladd[i] = 0; lval[i] = inf;
     }
   }
 
@@ -294,8 +279,8 @@ public:
     _update_max(x, a, b, 0, 0, n0);
   }
 
-  void add(int a, int b, ll x) {
-    _add(x, a, b, 0, 0, n0);
+  void add_val(int a, int b, ll x) {
+    _add_val(x, a, b, 0, 0, n0);
   }
 
   void update_val(int a, int b, ll x) {
@@ -359,7 +344,7 @@ int main() {
     //cout << "=== begin === " << endl;
   //for(int i=0; i<n; ++i) cin >> v[i];
   for(int i=0; i<n; ++i) v[i] = val(mt);
-  SegmentTreeBeats stb(n, v);
+  SegmentTree stb(n, v);
   int a, b, t;
   ll x, r0, r1;
   int c = 0;
@@ -430,7 +415,7 @@ int main() {
         }
         break;
       case 5:
-        stb.add(a, b, x);
+        stb.add_val(a, b, x);
         for(int i=a; i<b; ++i) {
           v[i] += x;
         }

@@ -11,19 +11,19 @@ using ll = long long;
 
 #define N 10003
 
-class SegmentTreeBeats {
+class SegmentTree {
   const ll inf = 1e18;
   int n, n0;
   ll max_v[4*N], smax_v[4*N];
-  ll sum[4*N], cnt[4*N];
+  ll sum[4*N], max_c[4*N];
 
   void push(int k) {
     if(max_v[k] < max_v[2*k+1]) {
-      sum[2*k+1] += (max_v[k] - max_v[2*k+1]) * cnt[2*k+1];
+      sum[2*k+1] += (max_v[k] - max_v[2*k+1]) * max_c[2*k+1];
       max_v[2*k+1] = max_v[k];
     }
     if(max_v[k] < max_v[2*k+2]) {
-      sum[2*k+2] += (max_v[k] - max_v[2*k+2]) * cnt[2*k+2];
+      sum[2*k+2] += (max_v[k] - max_v[2*k+2]) * max_c[2*k+2];
       max_v[2*k+2] = max_v[k];
     }
   }
@@ -33,15 +33,15 @@ class SegmentTreeBeats {
 
     if(max_v[2*k+1] < max_v[2*k+2]) {
       max_v[k] = max_v[2*k+2];
-      cnt[k] = cnt[2*k+2];
+      max_c[k] = max_c[2*k+2];
       smax_v[k] = max(max_v[2*k+1], smax_v[2*k+2]);
     } else if(max_v[2*k+1] > max_v[2*k+2]) {
       max_v[k] = max_v[2*k+1];
-      cnt[k] = cnt[2*k+1];
+      max_c[k] = max_c[2*k+1];
       smax_v[k] = max(smax_v[2*k+1], max_v[2*k+2]);
     } else {
       max_v[k] = max_v[2*k+1];
-      cnt[k] = cnt[2*k+1] + cnt[2*k+2];
+      max_c[k] = max_c[2*k+1] + max_c[2*k+2];
       smax_v[k] = max(smax_v[2*k+1], smax_v[2*k+2]);
     }
   }
@@ -51,7 +51,7 @@ class SegmentTreeBeats {
       return;
     }
     if(a <= l && r <= b && smax_v[k] < x) {
-      sum[k] += (x - max_v[k]) * cnt[k];
+      sum[k] += (x - max_v[k]) * max_c[k];
       max_v[k] = x;
       return;
     }
@@ -89,31 +89,23 @@ class SegmentTreeBeats {
   }
 
 public:
-  SegmentTreeBeats(int n) {
-    SegmentTreeBeats(n, nullptr);
+  SegmentTree(int n) {
+    SegmentTree(n, nullptr);
   }
 
-  SegmentTreeBeats(int n, ll *a) : n(n) {
+  SegmentTree(int n, ll *a) : n(n) {
     n0 = 1;
     while(n0 < n) n0 <<= 1;
 
-    if(a != nullptr) {
-      for(int i=0; i<n; ++i) {
-        max_v[n0-1+i] = sum[n0-1+i] = a[i];
-        smax_v[n0-1+i] = -inf;
-        cnt[n0-1+i] = 1;
-      }
-      for(int i=n; i<n0; ++i) {
-        max_v[n0-1+i] = smax_v[n0-1+i] = 0;
-        smax_v[n0-1+i] = -inf;
-        cnt[n0-1+i] = 1;
-      }
-    } else {
-      for(int i=n; i<n0; ++i) {
-        max_v[n0-1+i] = smax_v[n0-1+i] = 0;
-        smax_v[n0-1+i] = -inf;
-        cnt[n0-1+i] = 0;
-      }
+    for(int i=0; i<n; ++i) {
+      max_v[n0-1+i] = sum[n0-1+i] = (a != nullptr ? a[i] : 0);
+      smax_v[n0-1+i] = -inf;
+      max_c[n0-1+i] = 1;
+    }
+
+    for(int i=n; i<n0; ++i) {
+      max_v[n0-1+i] = smax_v[n0-1+i] = -inf;
+      sum[n0-1+i] = max_c[n0-1+i] = 0;
     }
     for(int i=n0-2; i>=0; i--) update(i);
   }
@@ -142,7 +134,7 @@ int main() {
   uniform_int_distribution<ll> val(0, 1e10);
 
   for(int i=0; i<n; ++i) v[i] = val(mt);
-  SegmentTreeBeats stb(n, v);
+  SegmentTree stb(n, v);
   int a, b;
   ll x, r0, r1;
   while(1) {
