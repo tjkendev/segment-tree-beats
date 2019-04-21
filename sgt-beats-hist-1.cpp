@@ -7,6 +7,7 @@ using ll = long long;
 // Segment Tree Beats (Histric Information)
 // - l<=i<r について、 A_i の値に x を加える
 // - l<=i<r の中の A_i の最大値を求める
+// - l<=i<r の中の A_i の総和を求める
 // - l<=i<r の中の B_i の最大値を求める
 // - l<=i<r の中の B_i の総和を求める
 // - (各クエリ後、全てのiについて B_i = max(A_i, B_i))
@@ -135,6 +136,20 @@ class SegmentTree {
     return max(lv, rv);
   }
 
+  ll _query_sum(int a, int b, int k, int l, int r) {
+    if(b <= l || r <= a) {
+      return 0;
+    }
+    if(a <= l && r <= b) {
+      return cur_s[k];
+    }
+    push(k);
+    ll lv = _query_sum(a, b, 2*k+1, l, (l+r)/2);
+    ll rv = _query_sum(a, b, 2*k+2, (l+r)/2, r);
+    return lv + rv;
+  }
+
+
   ll _query_hist_max(int a, int b, int k, int l, int r) {
     if(b <= l || r <= a) {
       return -inf;
@@ -195,6 +210,10 @@ public:
     return _query_max(a, b, 0, 0, n0);
   }
 
+  ll query_sum(int a, int b) {
+    return _query_sum(a, b, 0, 0, n0);
+  }
+
   ll query_hmax(int a, int b) {
     return _query_hist_max(a, b, 0, 0, n0);
   }
@@ -211,7 +230,7 @@ int main() {
   mt19937 mt(rnd());
   uniform_int_distribution<> szrnd(100, 1000);
   int n = szrnd(mt);
-  uniform_int_distribution<int> rtype(0, 3), gen(0, n);
+  uniform_int_distribution<int> rtype(0, 4), gen(0, n);
   uniform_int_distribution<ll> val(-1e10, 1e10);
 
   for(int i=0; i<n; ++i) v[i] = w[i] = val(mt);
@@ -252,6 +271,16 @@ int main() {
         }
         break;
       case 2:
+        r0 = stb.query_sum(a, b);
+        r1 = 0;
+        for(int i=a; i<b; ++i) {
+          r1 += v[i];
+        }
+        if(r0 != r1) {
+          cout << "query sum (" << a << ", " << b << ") : " << r0 << " " << r1 << endl;
+        }
+        break;
+      case 3:
         r0 = stb.query_hmax(a, b);
         r1 = -1e18;
         for(int i=a; i<b; ++i) {
@@ -261,7 +290,7 @@ int main() {
           cout << "query hmax (" << a << ", " << b << ") : " << r0 << " " << r1 << endl;
         }
         break;
-      case 3:
+      case 4:
         r0 = stb.query_hmax_sum(a, b);
         r1 = 0;
         for(int i=a; i<b; ++i) {
