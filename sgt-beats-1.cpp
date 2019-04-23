@@ -169,20 +169,11 @@ public:
     n0 = 1;
     while(n0 < n) n0 <<= 1;
 
-    if(a != nullptr) {
-      for(int i=0; i<n; ++i) {
-        max_v[n0-1+i] = min_v[n0-1+i] = sum[n0-1+i] = a[i];
-        smax_v[n0-1+i] = -inf;
-        smin_v[n0-1+i] = inf;
-        max_c[n0-1+i] = min_c[n0-1+i] = 1;
-      }
-    } else {
-      for(int i=n; i<n0; ++i) {
-        max_v[n0-1+i] = min_v[n0-1+i] = sum[n0-1+i] = 0;
-        smax_v[n0-1+i] = -inf;
-        smin_v[n0-1+i] = inf;
-        max_c[n0-1+i] = min_c[n0-1+i] = 1;
-      }
+    for(int i=0; i<n; ++i) {
+      max_v[n0-1+i] = min_v[n0-1+i] = sum[n0-1+i] = (a != nullptr ? a[i] : 0);
+      smax_v[n0-1+i] = -inf;
+      smin_v[n0-1+i] = inf;
+      max_c[n0-1+i] = min_c[n0-1+i] = 1;
     }
     for(int i=n; i<n0; ++i) {
       max_v[n0-1+i] = smax_v[n0-1+i] = -inf;
@@ -221,7 +212,7 @@ int main() {
   uniform_int_distribution<> szrnd(1000, 10000);
   int n = szrnd(mt);
   uniform_int_distribution<int> rtype(0, 4), gen(0, n);
-  uniform_int_distribution<ll> val(0, 1e10);
+  uniform_int_distribution<ll> val(-1e10, 1e10);
 
   for(int i=0; i<n; ++i) v[i] = val(mt);
   SegmentTreeBeats stb(n, v);
@@ -256,7 +247,7 @@ int main() {
         break;
       case 2:
         r0 = stb.query_max(a, b);
-        r1 = 0;
+        r1 = (-1e18);
         for(int i=a; i<b; ++i) {
           if(r1 < v[i]) r1 = v[i];
         }

@@ -6,6 +6,7 @@ using ll = long long;
 
 // Segment Tree Beats (Histric Information)
 // - l<=i<r について、 A_i の値に x を加える
+// - l<=i<r の中の A_i を min(A_i, x) に更新
 // - l<=i<r の中の A_i の最大値を求める
 // - l<=i<r の中の A_i の総和を求める
 // - l<=i<r の中の B_i の最大値を求める
@@ -21,12 +22,12 @@ class SegmentTree {
   ll cur_s[4*N], cur_ma[4*N];
   ll ladd[4*N], ladd_m[4*N];
 
-  // D_i = B_i - A_i の最小値管理
   ll min_v[4*N], smin_v[4*N];
   ll min_c[4*N], min_s[4*N];
-  // D_iが同じものの中で、A_iが最大のものを管理する
-  // D_i = 0の時の最大値更新のために使う
-  ll min_vc[4*N];
+  // 同じminの中で、最大のA_iと次最大のA_i、最大のA_iの個数を管理する
+  // TODO: これで何できるかは考える
+  // - (過去最大値 - 現在地)が最小の中での現在地の最大値...?
+  ll minmax_v[4*N], sminmax_v[4*N], minmax_c[4*N];
   ll hmax_m[4*N];
 
   void update_node_min(int k, ll x) {
@@ -41,8 +42,8 @@ class SegmentTree {
     cur_s[k] += a * len[k];
     cur_ma[k] += a;
 
-    hmax_m[k] = max(hmax_m[k], min_vc[k] + ma);
-    min_vc[k] += a;
+    hmax_m[k] = max(hmax_m[k], minmax_v[k] + ma);
+    minmax_v[k] += a;
 
     min_v[k] -= a; smin_v[k] -= a;
     min_s[k] -= a * len[k];
@@ -80,20 +81,37 @@ class SegmentTree {
       min_c[k] = min_c[2*k+2];
       smin_v[k] = min(min_v[2*k+1], smin_v[2*k+2]);
 
-      min_vc[k] = min_vc[2*k+2];
+      minmax_v[k] = minmax_v[2*k+2];
+      sminmax_v[k] = sminmax_v[2*k+2];
     } else if(min_v[2*k+1] < min_v[2*k+2]) {
       min_v[k] = min_v[2*k+1];
       min_c[k] = min_c[2*k+1];
       smin_v[k] = min(smin_v[2*k+1], min_v[2*k+2]);
 
-      min_vc[k] = min_vc[2*k+1];
+      minmax_v[k] = minmax_v[2*k+1];
+      sminmax_v[k] = sminmax_v[2*k+1];
     } else {
       min_v[k] = min_v[2*k+1];
       min_c[k] = min_c[2*k+1] + min_c[2*k+2];
       smin_v[k] = min(smin_v[2*k+1], smin_v[2*k+2]);
 
-      min_vc[k] = max(min_vc[2*k+1], min_vc[2*k+2]);
+      if(minmax_v[2*k+1] > minmax_v[2*k+2]) {
+        minmax_v[k] = minmax_v[2*k+1];
+        sminmax_v[k] = max(sminmax_v[2*k+1], minmax_v[2*k+2]);
+        minmax_c[k] = minmax_c[2*k+1];
+      } else if(minmax_v[2*k+1] < minmax_v[2*k+2]) {
+        minmax_v[k] = minmax_v[2*k+2];
+        sminmax_v[k] = max(minmax_v[2*k+1], sminmax_v[2*k+2]);
+        minmax_c[k] = minmax_c[2*k+2];
+      } else {
+        minmax_v[k] = minmax_v[2*k+2];
+        sminmax_v[k] = max(sminmax_v[2*k+1], sminmax_v[2*k+2]);
+        minmax_c[k] = minmax_c[2*k+1] + minmax_c[2*k+2];
+      }
     }
+  }
+
+  void _update_min(ll x, int a, int b, int k, int l, int r) {
   }
 
   void _update_max(ll x, int k, int l, int r) {
@@ -192,13 +210,15 @@ public:
     }
 
     for(int i=0; i<n; ++i) {
-      hmax_m[n0-1+i] = cur_s[n0-1+i] = min_vc[n0-1+i] = cur_ma[n0-1+i] = (a != nullptr ? a[i] : 0);
+      hmax_m[n0-1+i] = cur_s[n0-1+i] = minmax_v[n0-1+i] = cur_ma[n0-1+i] = (a != nullptr ? a[i] : 0);
+      sminmax_v[n0-1+i] = -inf;
       min_v[n0-1+i] = min_s[n0-1+i] = 0;
       smin_v[n0-1+i] = inf;
       min_c[n0-1+i] = 1;
     }
     for(int i=n; i<n0; ++i) {
-      hmax_m[n0-1+i] = cur_s[n0-1+i] = min_vc[n0-1+i] = cur_ma[n0-1+i] = 0;
+      hmax_m[n0-1+i] = cur_s[n0-1+i] = minmax_v[n0-1+i] = cur_ma[n0-1+i] = 0;
+      sminmax_v[n0-1+i] = -inf;
       min_v[n0-1+i] = smin_v[n0-1+i] = inf;
       min_c[n0-1+i] = 0;
     }

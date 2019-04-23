@@ -241,7 +241,7 @@ class SegmentTree {
     return lv + rv;
   }
 
-public:
+  public:
   SegmentTree(int n) {
     SegmentTree(n, nullptr);
   }
@@ -331,7 +331,7 @@ ll v[N], w[N];
 int main() {
   random_device rnd;
   mt19937 mt(rnd());
-  uniform_int_distribution<> szrnd(1000, 10000);
+  uniform_int_distribution<> szrnd(5000, 10000);
   uniform_int_distribution<ll> val(0, 1e10);
 
   int n = szrnd(mt);
@@ -339,111 +339,110 @@ int main() {
   //cin >> n;
   uniform_int_distribution<int> rtype(0, 6), gen(0, n);
 
-
   while(1) {
     //cout << "=== begin === " << endl;
-  //for(int i=0; i<n; ++i) cin >> v[i];
-  for(int i=0; i<n; ++i) v[i] = val(mt);
-  SegmentTree stb(n, v);
-  int a, b, t;
-  ll x, r0, r1;
-  int c = 0;
-  bool show = false;
-  bool wrong = false;
+    //for(int i=0; i<n; ++i) cin >> v[i];
+    for(int i=0; i<n; ++i) v[i] = val(mt);
+    SegmentTree stb(n, v);
+    int a, b, t;
+    ll x, r0, r1;
+    int c = 0;
+    bool show = true;
+    bool wrong = false;
 
-  //for(int i=0; i<n; ++i) cout << " " << v[i]; cout << endl;
-  while(++c && !wrong) {
-    t = rtype(mt);
-    a = gen(mt); b = gen(mt);
-    x = val(mt);
-    //cin >> t >> a >> b >> x;
-    if(show) {
-      cout << c << " : ";
+    //for(int i=0; i<n; ++i) cout << " " << v[i]; cout << endl;
+    while(++c && !wrong) {
+      t = rtype(mt);
+      a = gen(mt); b = gen(mt);
+      x = val(mt);
+      //cin >> t >> a >> b >> x;
+      if(show) {
+        cout << c << " : ";
+      }
+      if(a == b) continue;
+      if(a > b) swap(a, b);
+      switch(t) {
+        case 0:
+          if(show) {
+            cout << "update min (" << a << ", " << b << ") = " << x << endl;
+          }
+          stb.update_min(a, b, x);
+          for(int i=a; i<b; ++i) {
+            if(x < v[i]) v[i] = x;
+          }
+          break;
+        case 1:
+          if(show) {
+            cout << "update max (" << a << ", " << b << ") = " << x << endl;
+          }
+          stb.update_max(a, b, x);
+          for(int i=a; i<b; ++i) {
+            if(v[i] < x) v[i] = x;
+          }
+          break;
+        case 2:
+          r0 = stb.query_max(a, b);
+          r1 = 0;
+          for(int i=a; i<b; ++i) {
+            if(r1 < v[i]) r1 = v[i];
+          }
+          if(show || r0 != r1) {
+            wrong |= (r0 != r1);
+            cout << "query max (" << a << ", " << b << ") : " << r0 << " " << r1 << endl;
+          }
+          break;
+        case 3:
+          r0 = stb.query_min(a, b);
+          r1 = (1e18);
+          for(int i=a; i<b; ++i) {
+            if(v[i] < r1) r1 = v[i];
+          }
+          if(show || r0 != r1) {
+            wrong |= (r0 != r1);
+            cout << "query min (" << a << ", " << b << ") : " << r0 << " " << r1 << endl;
+          }
+          break;
+        case 4:
+          r0 = stb.query_sum(a, b);
+          r1 = 0;
+          for(int i=a; i<b; ++i) {
+            r1 += v[i];
+          }
+          if(show || r0 != r1) {
+            wrong |= (r0 != r1);
+            cout << "query sum (" << a << ", " << b << ") : " << r0 << " " << r1 << endl;
+          }
+          break;
+        case 5:
+          stb.add_val(a, b, x);
+          for(int i=a; i<b; ++i) {
+            v[i] += x;
+          }
+          if(show) {
+            cout << "add " << x << " to (" << a << ", " << b << ")" << endl;
+          }
+          break;
+        case 6:
+          stb.update_val(a, b, x);
+          for(int i=a; i<b; ++i) {
+            v[i] = x;
+          }
+          if(show) {
+            cout << "update to " << x << " in (" << a << ", " << b << ")" << endl;
+          }
+          break;
+        default:
+          continue;
+      }
+      if(false && show) {
+        cout << "expected:";
+        for(int i=0; i<n; ++i) cout << " " << v[i]; cout << endl;
+        cout << "  actual:";
+        stb.print();
+      }
+      //stb.debug();
     }
-    if(a == b) continue;
-    if(a > b) swap(a, b);
-    switch(t) {
-      case 0:
-        if(show) {
-          cout << "update min (" << a << ", " << b << ") = " << x << endl;
-        }
-        stb.update_min(a, b, x);
-        for(int i=a; i<b; ++i) {
-          if(x < v[i]) v[i] = x;
-        }
-        break;
-      case 1:
-        if(show) {
-          cout << "update max (" << a << ", " << b << ") = " << x << endl;
-        }
-        stb.update_max(a, b, x);
-        for(int i=a; i<b; ++i) {
-          if(v[i] < x) v[i] = x;
-        }
-        break;
-      case 2:
-        r0 = stb.query_max(a, b);
-        r1 = 0;
-        for(int i=a; i<b; ++i) {
-          if(r1 < v[i]) r1 = v[i];
-        }
-        if(show || r0 != r1) {
-          wrong |= (r0 != r1);
-          cout << "query max (" << a << ", " << b << ") : " << r0 << " " << r1 << endl;
-        }
-        break;
-      case 3:
-        r0 = stb.query_min(a, b);
-        r1 = (1e18);
-        for(int i=a; i<b; ++i) {
-          if(v[i] < r1) r1 = v[i];
-        }
-        if(show || r0 != r1) {
-          wrong |= (r0 != r1);
-          cout << "query min (" << a << ", " << b << ") : " << r0 << " " << r1 << endl;
-        }
-        break;
-      case 4:
-        r0 = stb.query_sum(a, b);
-        r1 = 0;
-        for(int i=a; i<b; ++i) {
-          r1 += v[i];
-        }
-        if(show || r0 != r1) {
-          wrong |= (r0 != r1);
-          cout << "query sum (" << a << ", " << b << ") : " << r0 << " " << r1 << endl;
-        }
-        break;
-      case 5:
-        stb.add_val(a, b, x);
-        for(int i=a; i<b; ++i) {
-          v[i] += x;
-        }
-        if(show) {
-          cout << "add " << x << " to (" << a << ", " << b << ")" << endl;
-        }
-        break;
-      case 6:
-        stb.update_val(a, b, x);
-        for(int i=a; i<b; ++i) {
-          v[i] = x;
-        }
-        if(show) {
-          cout << "update to " << x << " in (" << a << ", " << b << ")" << endl;
-        }
-        break;
-      default:
-        continue;
-    }
-    if(false && show) {
-      cout << "expected:";
-      for(int i=0; i<n; ++i) cout << " " << v[i]; cout << endl;
-      cout << "  actual:";
-      stb.print();
-    }
-    //stb.debug();
-  }
-  if(wrong) break;
+    if(wrong) break;
   }
   return 0;
 }
