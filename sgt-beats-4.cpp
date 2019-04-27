@@ -90,7 +90,7 @@ class SegmentTree {
     }
   }
 
-  // pushdown
+  // pushdown: 親ノードから子ノードへの伝搬
   void push(int k) {
     if(ladd_a[k] != 0 || ladd_b[k] != 0) {
       addall(2*k+1, ladd_a[k], ladd_b[k]);
@@ -102,7 +102,6 @@ class SegmentTree {
     update_node_max(2*k+2, max_va[k], max_vb[k]);
   }
 
-  // ノードkが保持する情報を子ノードから更新
   inline void _update_max_v(int k, ll *max_v, ll *smax_v, Pair *sum_mv, Pair *sum_v) {
     if(max_v[2*k+1] < max_v[2*k+2]) {
       max_v[k] = max_v[2*k+2];
@@ -141,6 +140,7 @@ class SegmentTree {
     }
   }
 
+  // update: 子ノードから親ノードへの伝搬
   void update(int k) {
     // sum_ma[k], sum_a[k], sum_mb[k], sum_b[k] を計算する
     _update_max_v(k, max_va, smax_va, sum_ma, sum_a);
