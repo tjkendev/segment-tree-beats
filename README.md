@@ -13,7 +13,7 @@
 - range maximum query
 - range sum query
 
-計算量: O(M log N)
+計算量: O((N+M) log N)
 
 #### `sgt-beats-1.cpp`
 
@@ -23,7 +23,7 @@
 - range maximum query
 - range sum query
 
-計算量: O(M log^2 N)
+計算量: O((N+M) log^2 N)
 
 #### `sgt-beats-2.cpp`
 
@@ -34,7 +34,7 @@
 - range sum query
 - range add query
 
-計算量: O(M log^2 N)
+計算量: O((N+M) log^2 N)
 
 #### `sgt-beats-3.cpp`
 
@@ -46,7 +46,7 @@
 - range add query
 - range update query
 
-計算量: O(M log^2 N)
+計算量: O((N+M) log^2 N)
 
 ### 区間過去最大値(最小値)クエリ
 
