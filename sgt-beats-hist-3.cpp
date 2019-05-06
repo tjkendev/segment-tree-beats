@@ -9,6 +9,7 @@ using ll = long long;
 // - i<=i<r について、 A_i の値を max(A_i, x) に更新
 // - i<=i<r について、 A_i の値を min(A_i, x) に更新
 // - l<=i<r について、 A_i の値に x を加える
+// - l<=i<r について、 A_i の値を x に更新
 // - l<=i<r の中の A_i の最大値を求める
 // - l<=i<r の中の B_i の総和を求める
 // - (各クエリ後、全てのiについて B_i = max(A_i, B_i))
@@ -514,6 +515,11 @@ class SegmentTree {
     _add_val(x, a, b, 0, 0, n0);
   }
 
+  void update_val(int a, int b, ll x) {
+    _update_min(x, a, b, 0, 0, n0);
+    _update_max(x, a, b, 0, 0, n0);
+  }
+
   ll query_hmax_sum(int a, int b) {
     return _query_hist_max_sum(a, b, 0, 0, n0);
   }
@@ -544,7 +550,7 @@ int main() {
   mt19937 mt(rnd());
   uniform_int_distribution<> szrnd(100, 1000);
   int n = 1000; //szrnd(mt);
-  uniform_int_distribution<int> rtype(0, 4), gen(0, n);
+  uniform_int_distribution<int> rtype(0, 5), gen(0, n);
   uniform_int_distribution<ll> val(-1e10, 1e10);
 
   const int limit = 200000;
@@ -584,6 +590,14 @@ int main() {
           }
           break;
         case 1:
+          printf("%d: update_val (%d, %d) : %lld\n", c, a, b, x);
+          stb.update_val(a, b, x);
+          for(int i=a; i<b; ++i) {
+            v[i] = x;
+            w[i] = max(v[i], w[i]);
+          }
+          break;
+        case 2:
           printf("%d: query_max (%d, %d)\n", c, a, b);
           r0 = stb.query_max(a, b);
           r1 = -1e18;
@@ -595,7 +609,7 @@ int main() {
             wrong = true;
           }
           break;
-        case 2:
+        case 3:
           printf("%d: query_hmax_sum (%d, %d)\n", c, a, b);
           r0 = stb.query_hmax_sum(a, b);
           r1 = 0;
@@ -607,14 +621,14 @@ int main() {
             wrong = true;
           }
           break;
-        case 3:
+        case 4:
           printf("%d: update_min (%d, %d): %lld\n", c, a, b, x);
           stb.update_min(a, b, x);
           for(int i=a; i<b; ++i) {
             v[i] = min(v[i], x);
           }
           break;
-        case 4:
+        case 5:
           printf("%d: update_max (%d, %d): %lld\n", c, a, b, x);
           stb.update_max(a, b, x);
           for(int i=a; i<b; ++i) {
@@ -629,7 +643,7 @@ int main() {
       if(wrong) break;
       ++c;
     }
-    if(c <= limit) break;
+    if(wrong) break;
   }
   return 0;
 }
