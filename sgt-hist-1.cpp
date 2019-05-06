@@ -5,7 +5,7 @@
 using namespace std;
 using ll = long long;
 
-// Segment Tree (with histric information)
+// Segment Tree (with historic information)
 // - l<=i<r について、 A_i の値を x に更新
 // - l<=i<r について、 A_i の値に x を加える
 // - l<=i<r の中の A_i の最大値を求める

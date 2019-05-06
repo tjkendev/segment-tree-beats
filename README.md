@@ -58,7 +58,7 @@
 - range add query
 - range maximum query
 - range sum query
-- range histric maximum query
+- range historic maximum query
 
 計算量: O(M log N)
 
@@ -71,8 +71,8 @@
 - range maximum query
 - range minimum query
 - range sum query
-- range histric maximum query
-- range histric minimum query
+- range historic maximum query
+- range historic minimum query
 
 計算量: O(M log N)
 

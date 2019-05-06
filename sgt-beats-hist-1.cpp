@@ -4,7 +4,7 @@
 using namespace std;
 using ll = long long;
 
-// Segment Tree Beats (Histric Information)
+// Segment Tree Beats (Historic Information)
 // - l<=i<r について、 A_i の値に x を加える
 // - l<=i<r の中の A_i の最大値を求める
 // - l<=i<r の中の A_i の総和を求める
