@@ -37,14 +37,14 @@ class SegmentTree {
   // ノードの各情報を更新する
   void update_node_max(int k, ll xa, ll xb) {
     if(xa < max_va[k]) {
-      if(max_p[k][0][0].a != -inf) max_p[k][0][0].a = xa;
-      if(max_p[k][0][1].a != -inf) max_p[k][0][1].a = xa;
+      if(max_p[k][1][1].a != -inf) max_p[k][1][1].a = xa;
+      if(max_p[k][1][0].a != -inf) max_p[k][1][0].a = xa;
       max_va[k] = xa;
     }
 
     if(xb < max_vb[k]) {
-      if(max_p[k][0][0].b != -inf) max_p[k][0][0].b = xb;
-      if(max_p[k][1][0].b != -inf) max_p[k][1][0].b = xb;
+      if(max_p[k][1][1].b != -inf) max_p[k][1][1].b = xb;
+      if(max_p[k][0][1].b != -inf) max_p[k][0][1].b = xb;
       max_vb[k] = xb;
     }
   }
@@ -108,12 +108,12 @@ class SegmentTree {
 
     for(int i=0; i<2; ++i) for(int j=0; j<2; ++j) {
       Pair &p = max_p[2*k+1][i][j];
-      Pair &e = max_p[k][p.a < max_va[k]][p.b < max_vb[k]];
+      Pair &e = max_p[k][p.a == max_va[k]][p.b == max_vb[k]];
       e = max(e, p);
     }
     for(int i=0; i<2; ++i) for(int j=0; j<2; ++j) {
       Pair &p = max_p[2*k+2][i][j];
-      Pair &e = max_p[k][p.a < max_va[k]][p.b < max_vb[k]];
+      Pair &e = max_p[k][p.a == max_va[k]][p.b == max_vb[k]];
       e = max(e, p);
     }
   }
@@ -178,7 +178,7 @@ class SegmentTree {
   }
 
 public:
-  SegmentTree(int n, ll *a = nullptr, ll *b = nullptr) : n(n) {
+  SegmentTree(int n, ll *a, ll *b) : n(n) {
     n0 = 1;
     while(n0 < n) n0 <<= 1;
 
@@ -192,7 +192,7 @@ public:
       for(int p=0; p<2; ++p) for(int q=0; q<2; ++q) {
         max_p[n0-1+i][p][q] = Pair{-inf, -inf};
       }
-      max_p[n0-1+i][0][0] = Pair{va, vb};
+      max_p[n0-1+i][1][1] = Pair{va, vb};
     }
 
     for(int i=n; i<n0; ++i) {
@@ -230,10 +230,10 @@ public:
   void debug() {
     for(int i=0; i<2*n0-1; ++i) {
       auto &mp = max_p[i];
-      printf("%d: max_va = %lld, smax_va = %lld, max_p11 = {%lld, %lld}, max_p12 = {%lld, %lld}\n",
+      printf("%d: max_va = %lld, smax_va = %lld, max_p00 = {%lld, %lld}, max_p01 = {%lld, %lld}\n",
           i, max_va[i], smax_va[i], mp[0][0].a, mp[0][0].b, mp[0][1].a, mp[0][1].b
       );
-      printf("%d: max_vb = %lld, smax_vb = %lld, max_p21 = {%lld, %lld}, max_p22 = {%lld, %lld}\n",
+      printf("%d: max_vb = %lld, smax_vb = %lld, max_p10 = {%lld, %lld}, max_p11 = {%lld, %lld}\n",
           i, max_vb[i], smax_vb[i], mp[1][0].a, mp[1][0].b, mp[1][1].a, mp[1][1].b
       );
       printf("%d: ladd = {%lld, %lld}\n", i, ladd_a[i], ladd_b[i]);
@@ -304,7 +304,7 @@ int main() {
   uniform_int_distribution<> szrnd(100, 1000);
   uniform_int_distribution<ll> val(-1e10, 1e10), val2(0, 1e10);
 
-  int n = szrnd(mt);
+  int n = 16; //szrnd(mt);
   uniform_int_distribution<int> rtype(0, 4), gen(0, n);
 
   for(int i=0; i<n; ++i) v[i] = val(mt);
