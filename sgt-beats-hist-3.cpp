@@ -291,21 +291,11 @@ class SegmentTree {
       smax_v[k] = max(smax_v[2*k+1], max_v[2*k+2]);
 
       dmin[k] = dmin[2*k+1];
-      /*
-      if(max_v[2*k+2] > min_v[k]) {
-        dmin2[k].merge(dmin[2*k+2]);
-      }
-      */
     } else if(max_v[2*k+1] < max_v[2*k+2]) {
       max_c[k] = max_c[2*k+2];
       smax_v[k] = max(max_v[2*k+1], smax_v[2*k+2]);
 
       dmin[k] = dmin[2*k+2];
-      /*
-      if(max_v[2*k+1] > min_v[k]) {
-        dmin2[k].merge(dmin[2*k+1]);
-      }
-      */
     } else {
       max_c[k] = max_c[2*k+1] + max_c[2*k+2];
       smax_v[k] = max(smax_v[2*k+1], smax_v[2*k+2]);
@@ -318,21 +308,11 @@ class SegmentTree {
       smin_v[k] = min(smin_v[2*k+1], min_v[2*k+2]);
 
       dmin3[k] = dmin3[2*k+1];
-      /*
-      if(max_v[k] > min_v[2*k+2]) {
-        dmin2[k].merge(dmin3[2*k+2]);
-      }
-      */
     } else if(min_v[2*k+1] > min_v[2*k+2]) {
       min_c[k] = min_c[2*k+2];
       smin_v[k] = min(min_v[2*k+1], smin_v[2*k+2]);
 
       dmin3[k] = dmin3[2*k+2];
-      /*
-      if(max_v[k] > min_v[2*k+1]) {
-        dmin2[k].merge(dmin3[2*k+1]);
-      }
-      */
     } else {
       min_c[k] = min_c[2*k+1] + min_c[2*k+2];
       smin_v[k] = min(smin_v[2*k+1], smin_v[2*k+2]);
