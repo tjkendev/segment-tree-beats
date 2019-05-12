@@ -230,10 +230,10 @@ public:
   void debug() {
     for(int i=0; i<2*n0-1; ++i) {
       auto &mp = max_p[i];
-      printf("%d: max_va = %lld, smax_va = %lld, max_p00 = {%lld, %lld}, max_p01 = {%lld, %lld}\n",
+      printf("%d: max_a = {%lld, %lld}, max_p00 = {%lld, %lld}, max_p01 = {%lld, %lld}\n",
           i, max_va[i], smax_va[i], mp[0][0].a, mp[0][0].b, mp[0][1].a, mp[0][1].b
       );
-      printf("%d: max_vb = %lld, smax_vb = %lld, max_p10 = {%lld, %lld}, max_p11 = {%lld, %lld}\n",
+      printf("%d: max_b = {%lld, %lld}, max_p10 = {%lld, %lld}, max_p11 = {%lld, %lld}\n",
           i, max_vb[i], smax_vb[i], mp[1][0].a, mp[1][0].b, mp[1][1].a, mp[1][1].b
       );
       printf("%d: ladd = {%lld, %lld}\n", i, ladd_a[i], ladd_b[i]);
@@ -250,7 +250,7 @@ class NaiveSolver {
   ll a[N], b[N];
 
 public:
-  NaiveSolver(int n, ll *a = nullptr, ll *b = nullptr) : n(n) {
+  NaiveSolver(int n, ll *a, ll *b) : n(n) {
     for(int i=0; i<n; ++i) {
       this->a[i] = (a != nullptr ? a[i] : 0);
       this->b[i] = (b != nullptr ? b[i] : 0);
