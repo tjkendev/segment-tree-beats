@@ -16,22 +16,14 @@ using ll = long long;
 
 class SegmentTree {
   const static ll inf = 1e18;
-  struct Pair {
-    ll a, b;
-    ll sum() const { return a+b; }
-
-    bool operator<(const Pair& other) const {
-      return this->sum() < other.sum();
-    }
-  };
 
   int n, n0;
-  // == ノードkにおける4種類のペアの情報
+  // == ノードkにおける4種類のペアの情報 (a_i + b_i の値で持つバージョン)
   // max_p[k][1][1]: a_i と b_i が最大値となる中で a_i+b_i が最大となるペア P_{11} = (a_i, b_i)
   // max_p[k][1][0]: a_i が最大値、 b_i が非最大値となる中で a_i+b_i が最大となるペア P_{10} = (a_i, b_i)
   // max_p[k][0][1]: a_i が非最大値、 b_i が最大値となる中で a_i+b_i が最大となるペア P_{01} = (a_i, b_i)
   // max_p[k][0][0]: a_i と b_i が非最大値となる中で a_i+b_i が最大となるペア P_{00} = (a_i, b_i)
-  Pair max_p[4*N][2][2];
+  ll max_p[4*N][2][2];
 
   // 数列AとBに関する最大値、二番目の最大値
   ll max_va[4*N], smax_va[4*N];
@@ -43,15 +35,15 @@ class SegmentTree {
   void update_node_max(int k, ll xa, ll xb) {
     if(xa < max_va[k]) {
       // ペア P_{11}, P_{10} の a_i の値を更新
-      if(max_p[k][1][1].a != -inf) max_p[k][1][1].a = xa;
-      if(max_p[k][1][0].a != -inf) max_p[k][1][0].a = xa;
+      if(max_p[k][1][1] != -inf) max_p[k][1][1] += (xa - max_va[k]);
+      if(max_p[k][1][0] != -inf) max_p[k][1][0] += (xa - max_va[k]);
       max_va[k] = xa;
     }
 
     if(xb < max_vb[k]) {
       // ペア P_{11}, P_{01} の b_i の値を更新
-      if(max_p[k][1][1].b != -inf) max_p[k][1][1].b = xb;
-      if(max_p[k][0][1].b != -inf) max_p[k][0][1].b = xb;
+      if(max_p[k][1][1] != -inf) max_p[k][1][1] += (xb - max_vb[k]);
+      if(max_p[k][0][1] != -inf) max_p[k][0][1] += (xb - max_vb[k]);
       max_vb[k] = xb;
     }
   }
@@ -61,7 +53,7 @@ class SegmentTree {
     if(xa != 0) {
       // 4種類のペア全ての a_i の値に加算
       for(int i=0; i<2; ++i) for(int j=0; j<2; ++j) {
-        if(max_p[k][i][j].a != -inf) max_p[k][i][j].a += xa;
+        if(max_p[k][i][j] != -inf) max_p[k][i][j] += xa;
       }
 
       max_va[k] += xa;
@@ -72,7 +64,7 @@ class SegmentTree {
     if(xb != 0) {
       // 4種類のペア全ての b_i の値に加算
       for(int i=0; i<2; ++i) for(int j=0; j<2; ++j) {
-        if(max_p[k][i][j].b != -inf) max_p[k][i][j].b += xb;
+        if(max_p[k][i][j] != -inf) max_p[k][i][j] += xb;
       }
 
       max_vb[k] += xb;
@@ -115,20 +107,30 @@ class SegmentTree {
 
     // 更新する前に、親ノードの4種類のペアを一度初期化
     for(int i=0; i<2; ++i) for(int j=0; j<2; ++j) {
-      max_p[k][i][j] = Pair{-inf, -inf};
+      max_p[k][i][j] = -inf;
     }
 
     // 左子ノード2*k+1 から 親ノードk の情報を更新
-    for(int i=0; i<2; ++i) for(int j=0; j<2; ++j) {
-      Pair &p = max_p[2*k+1][i][j];
-      Pair &e = max_p[k][p.a == max_va[k]][p.b == max_vb[k]];
-      e = max(e, p);
+    for(int i=0; i<2; ++i) {
+      ll va = (i ? max_va : smax_va)[2*k+1];
+      for(int j=0; j<2; ++j) {
+        ll vb = (j ? max_vb : smax_vb)[2*k+1];
+
+        ll p = max_p[2*k+1][i][j];
+        ll &e = max_p[k][va == max_va[k]][vb == max_vb[k]];
+        e = max(e, p);
+      }
     }
     // 右子ノード2*k+2 から 親ノードk の情報を更新
-    for(int i=0; i<2; ++i) for(int j=0; j<2; ++j) {
-      Pair &p = max_p[2*k+2][i][j];
-      Pair &e = max_p[k][p.a == max_va[k]][p.b == max_vb[k]];
-      e = max(e, p);
+    for(int i=0; i<2; ++i) {
+      ll va = (i ? max_va : smax_va)[2*k+2];
+      for(int j=0; j<2; ++j) {
+        ll vb = (j ? max_vb : smax_vb)[2*k+2];
+
+        ll p = max_p[2*k+2][i][j];
+        ll &e = max_p[k][va == max_va[k]][vb == max_vb[k]];
+        e = max(e, p);
+      }
     }
   }
 
@@ -184,7 +186,7 @@ class SegmentTree {
     if(a <= l && r <= b) {
       auto &mp = max_p[k];
       // 4種類のペアのうち a_i + b_i の最大値を返す
-      return max(max(mp[0][0], mp[0][1]), max(mp[1][0], mp[1][1])).sum();
+      return max(max(mp[0][0], mp[0][1]), max(mp[1][0], mp[1][1]));
     }
     push(k);
     ll lv = _query_max(a, b, 2*k+1, l, (l+r)/2);
@@ -206,10 +208,10 @@ public:
 
       // 一度全てのペアを (-∞, -∞) で初期化
       for(int p=0; p<2; ++p) for(int q=0; q<2; ++q) {
-        max_p[n0-1+i][p][q] = Pair{-inf, -inf};
+        max_p[n0-1+i][p][q] = -inf;
       }
       // P_{11} のみ ペア(va, vb) を持つ
-      max_p[n0-1+i][1][1] = Pair{va, vb};
+      max_p[n0-1+i][1][1] = va + vb;
     }
 
     for(int i=n; i<n0; ++i) {
@@ -217,7 +219,7 @@ public:
       max_vb[n0-1+i] = smax_vb[n0-1+i] = -inf;
 
       for(int p=0; p<2; ++p) for(int q=0; q<2; ++q) {
-        max_p[n0-1+i][p][q] = Pair{-inf, -inf};
+        max_p[n0-1+i][p][q] = -inf;
       }
     }
     for(int i=n0-2; i>=0; i--) update(i);
@@ -252,11 +254,11 @@ public:
   void debug() {
     for(int i=0; i<2*n0-1; ++i) {
       auto &mp = max_p[i];
-      printf("%d: max_a = {%lld, %lld}, max_p00 = {%lld, %lld}, max_p01 = {%lld, %lld}\n",
-          i, max_va[i], smax_va[i], mp[0][0].a, mp[0][0].b, mp[0][1].a, mp[0][1].b
+      printf("%d: max_a = {%lld, %lld}, max_p00 = %lld, max_p01 = %lld\n",
+          i, max_va[i], smax_va[i], mp[0][0], mp[0][1]
       );
-      printf("%d: max_b = {%lld, %lld}, max_p10 = {%lld, %lld}, max_p11 = {%lld, %lld}\n",
-          i, max_vb[i], smax_vb[i], mp[1][0].a, mp[1][0].b, mp[1][1].a, mp[1][1].b
+      printf("%d: max_b = {%lld, %lld}, max_p10 = %lld, max_p11 = %lld\n",
+          i, max_vb[i], smax_vb[i], mp[1][0], mp[1][1]
       );
       printf("%d: ladd = {%lld, %lld}\n", i, ladd_a[i], ladd_b[i]);
     }
@@ -324,9 +326,9 @@ int main() {
   random_device rnd;
   mt19937 mt(rnd());
   uniform_int_distribution<> szrnd(100, 1000);
-  uniform_int_distribution<ll> val(-1e10, 1e10), val2(0, 1e10);
+  uniform_int_distribution<ll> val(-1e1, 1e1), val2(0, 1e1);
 
-  int n = szrnd(mt);
+  int n = 4; //szrnd(mt);
   uniform_int_distribution<int> rtype(0, 4), gen(0, n);
 
   for(int i=0; i<n; ++i) v[i] = val(mt);
@@ -374,7 +376,7 @@ int main() {
         // a<=i<b の中から A_i + B_i の最大値を求める
         r0 = stb.query_max(a, b);
         r1 = checker.query_max(a, b);
-        printf("%lld: query max (%d, %d) : result = %lld (%c) expected = %lld\n", cnt, a, b, r0, (r0 == r1 ? '=' : '!'), r1);
+        //printf("%lld: query max (%d, %d) : result = %lld (%c) expected = %lld\n", cnt, a, b, r0, (r0 == r1 ? '=' : '!'), r1);
         if(r0 != r1) {
           printf("%lld: query max (%d, %d) : result = %lld (%c) expected = %lld\n", cnt, a, b, r0, (r0 < r1 ? '<' : '>'), r1);
           checker.debug();

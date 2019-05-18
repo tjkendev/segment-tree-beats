@@ -20,13 +20,13 @@ class SegmentTreeBeats {
   ll max_v[4*N], smax_v[4*N], max_c[4*N];
   ll min_v[4*N], smin_v[4*N], min_c[4*N];
 
-  ll len[4*N];
-  ll ladd[4*N];
+  ll len[4*N];  // len[k]: ノードkに含まれる要素数
+  ll ladd[4*N]; // ladd[k]: 区間加算クエリによって発生する区間加算遅延値
 
   ll sum_b[4*N]; // b_i の区間総和
-  ll min_a[4*N]; // a_i が最小値の b_i に加算するlazy value
-  ll max_a[4*N]; // a_i が最大値の b_i に加算するlazy value
-  ll all_a[4*N]; // 区間内の b_i 全てに加算するlazy value
+  ll min_a[4*N]; // a_i が最小値の b_i に加算するlazy value (区間chmaxクエリ用)
+  ll max_a[4*N]; // a_i が最大値の b_i に加算するlazy value (区間chminクエリ用)
+  ll all_a[4*N]; // 区間内の b_i 全てに加算するlazy value (区間加算クエリ用)
 
   void update_node_max(int k, ll x) {
     if(max_v[k] == min_v[k]) {
@@ -47,21 +47,24 @@ class SegmentTreeBeats {
     }
   }
 
-  // 親ノードの最小値がmi、最大値がmaとしてノードkの区間総和の値を更新
+  // 親ノードpの最大値・最小値の状態を元に子ノードkの b_i の区間総和を更新
+  // lazy valueの伝搬
   void add_b(int p, int k, ll mi, ll ma, ll aa) {
-    // 親ノードの最小値とノードkの最小値が等しい場合のみ更新と伝搬を行う
+    // 親ノードpの最小値とノードkの最小値が等しい場合のみ更新と伝搬を行う
     if(p == -1 || min_v[p] == min_v[k]) {
+      // S_B への加算
       sum_b[k] += mi * min_c[k];
       min_a[k] += mi;
     }
 
-    // 親ノードの最大値とノードkの最大値が等しい場合のみ更新と伝搬を行う
+    // 親ノードpの最大値とノードkの最大値が等しい場合のみ更新と伝搬を行う
     if(p == -1 || max_v[p] == max_v[k]) {
+      // S_A への加算
       sum_b[k] += ma * max_c[k];
       max_a[k] += ma;
     }
 
-    // 全体に一様加算する値の伝搬
+    // 全体(S_A + S_B + S_C)に加算する値の伝搬
     sum_b[k] += aa * len[k];
     all_a[k] += aa;
   }
@@ -103,7 +106,7 @@ class SegmentTreeBeats {
   }
 
   void update(int k) {
-    // 区間総和の値を子ノードから計算し直す
+    // b_i の区間総和の値を子ノードから計算し直す
     sum_b[k] = sum_b[2*k+1] + sum_b[2*k+2];
 
     if(max_v[2*k+1] < max_v[2*k+2]) {
@@ -222,19 +225,23 @@ public:
     for(int i=n0-2; i>=0; i--) update(i);
   }
 
+  // 区間[a, b) について a_i の値を min(a_i, x) に更新
   void update_min(int a, int b, ll x) {
     return _update_min(x, a, b, 0, 0, n0);
   }
 
+  // 区間[a, b) について a_i の値を max(a_i, x) に更新
   void update_max(int a, int b, ll x) {
     return _update_max(x, a, b, 0, 0, n0);
   }
 
+  // 区間[a, b) について a_i の値を a_i+x に更新
   void add_val(int a, int b, ll x) {
     if(!x) return;
     _add_val(x, a, b, 0, 0, n0);
   }
 
+  // 区間[a, b) の b_i の総和を求める
   ll query_sum(int a, int b) {
     return _query_sum(a, b, 0, 0, n0);
   }
@@ -246,7 +253,7 @@ int main() {
   random_device rnd;
   mt19937 mt(rnd());
   uniform_int_distribution<> szrnd(1000, 10000);
-  int n = 4; //szrnd(mt);
+  int n = szrnd(mt);
   uniform_int_distribution<int> rtype(0, 3), gen(0, n);
   uniform_int_distribution<ll> val(-1e10, 1e10);
 

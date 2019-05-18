@@ -19,6 +19,8 @@ class SegmentTree {
     ll a, b;
 
     ll sum() const { return a + b; }
+
+    // Pair同士を比較する時は a_i + b_i の値が大きい方を大きいとする
     bool operator<(const Pair &other) const {
       return this->sum() < other.sum();
     }
@@ -30,9 +32,9 @@ class SegmentTree {
   // 遅延させている b_i の更新値
   ll lval[4*N];
 
-  // a_i が最大値となる中で、最大値となるペア(a_i, b_i)
+  // a_i が最大値となる中で a_i + b_i が最大値となるペア P_A = (a_i, b_i)
   Pair max_p[4*N];
-  // a_i が最大値未満となる中で、最大値となるペア(a_i, b_i)
+  // a_i が非最大値となる中で a_i + b_i が最大値となるペア P_B = (a_i, b_i)
   Pair nmax_p[4*N];
 
   void update_node_max(int k, ll x) {
@@ -44,12 +46,14 @@ class SegmentTree {
   }
 
   void update_val(int k, ll x) {
+    // ペアに含まれる b_i の値を x に更新
     max_p[k].b = x;
     if(nmax_p[k].b != -inf) nmax_p[k].b = x;
 
     lval[k] = x;
   }
 
+  // 親ノードから子ノードに情報を伝搬
   void push(int k) {
     // a_i の更新
     if(max_v[k] < max_v[2*k+1]) {
@@ -67,29 +71,30 @@ class SegmentTree {
     }
   }
 
+  // 子ノードから親ノードの情報を更新
   void update(int k) {
-    // 2*k+1, 2*k+2 の非最大値
+    // 2*k+1, 2*k+2 の非最大値のうちの最大値を 非最大値として更新
     nmax_p[k] = max(nmax_p[2*k+1], nmax_p[2*k+2]);
 
     if(max_v[2*k+1] < max_v[2*k+2]) {
       max_v[k] = max_v[2*k+2];
       smax_v[k] = max(max_v[2*k+1], smax_v[2*k+2]);
 
-      // 2*k+2 は最大値、2*k+1 は非最大値
+      // 2*k+2 は最大値、2*k+1 は非最大値 として更新
       max_p[k] = max_p[2*k+2];
       nmax_p[k] = max(nmax_p[k], max_p[2*k+1]);
     } else if(max_v[2*k+1] > max_v[2*k+2]) {
       max_v[k] = max_v[2*k+1];
       smax_v[k] = max(smax_v[2*k+1], max_v[2*k+2]);
 
-      // 2*k+1 は最大値、2*k+2 は非最大値
+      // 2*k+1 は最大値、2*k+2 は非最大値 として更新
       max_p[k] = max_p[2*k+1];
       nmax_p[k] = max(nmax_p[k], max_p[2*k+2]);
     } else {
       max_v[k] = max_v[2*k+1];
       smax_v[k] = max(smax_v[2*k+1], smax_v[2*k+2]);
 
-      // 2*k+1, 2*k+2 共に最大値
+      // 2*k+1, 2*k+2 共に最大値 として更新
       max_p[k] = max(max_p[2*k+1], max_p[2*k+2]);
     }
   }
@@ -158,27 +163,25 @@ public:
     }
     for(int i=n; i<n0; ++i) {
       max_v[n0-1+i] = smax_v[n0-1+i] = -inf;
-
       max_p[n0-1+i] = nmax_p[n0-1+i] = Pair{-inf, -inf};
     }
     for(int i=n0-2; i>=0; i--) update(i);
   }
 
-  // range minimize query: a_i <- min(a_i, x)
+  // 区間[a, b) について a_i の値を min(a_i, x) に更新
   void update_min(int a, int b, ll x) {
     return _update_min(x, a, b, 0, 0, n0);
   }
 
-  // range update query: b_i <- x
+  // 区間[a, b) について b_i の値を x に更新
   void update_val(int a, int b, ll x) {
     _update_val(x, a, b, 0, 0, n0);
   }
 
-  // range minimum query: min(a_i + b_i)
+  // 区間[a, b) の中で max(a_i + b_i) を求める
   ll query_max(int a, int b) {
     return _query_max(a, b, 0, 0, n0);
   }
-
 };
 
 ll v[N], w[N];
@@ -187,7 +190,7 @@ int main() {
   random_device rnd;
   mt19937 mt(rnd());
   uniform_int_distribution<> szrnd(1000, 10000);
-  int n = szrnd(mt);
+  int n = 16; //szrnd(mt);
   uniform_int_distribution<int> rtype(0, 2), gen(0, n);
   uniform_int_distribution<ll> val(-1e10, 1e10);
 
@@ -197,7 +200,7 @@ int main() {
   int a, b;
   ll x, r0, r1;
   int c = 0;
-  bool show = true;
+  bool show = false;
   while(++c) {
     a = gen(mt); b = gen(mt);
     if(a == b) continue;
