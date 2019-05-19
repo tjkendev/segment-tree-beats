@@ -48,7 +48,10 @@ class SegmentTree {
   void update_val(int k, ll x) {
     // ペアに含まれる b_i の値を x に更新
     max_p[k].b = x;
-    if(nmax_p[k].b != -inf) nmax_p[k].b = x;
+    if(nmax_p[k].b != -inf) {
+      nmax_p[k].a = smax_v[k];
+      nmax_p[k].b = x;
+    }
 
     lval[k] = x;
   }
@@ -187,58 +190,85 @@ public:
 ll v[N], w[N];
 
 int main() {
+  bool ipt = false;
+
   random_device rnd;
   mt19937 mt(rnd());
   uniform_int_distribution<> szrnd(1000, 10000);
-  int n = 16; //szrnd(mt);
+  int n = szrnd(mt);
+  if(ipt) {
+    cin >> n;
+  }
   uniform_int_distribution<int> rtype(0, 2), gen(0, n);
   uniform_int_distribution<ll> val(-1e10, 1e10);
 
-  for(int i=0; i<n; ++i) v[i] = val(mt);
-  for(int i=0; i<n; ++i) w[i] = val(mt);
-  SegmentTree stb(n, v, w);
-  int a, b;
-  ll x, r0, r1;
-  int c = 0;
-  bool show = false;
-  while(++c) {
-    a = gen(mt); b = gen(mt);
-    if(a == b) continue;
-    if(a > b) swap(a, b);
-    x = val(mt);
 
-    switch(rtype(mt)) {
-      case 0:
-        if(show) {
-          cout << "update min (" << a << ", " << b << ") = " << x << endl;
-        }
-        stb.update_min(a, b, x);
-        for(int i=a; i<b; ++i) {
-          if(x < v[i]) v[i] = x;
-        }
-        break;
-      case 1:
-        if(show) {
-          cout << "update val (" << a << ", " << b << ") = " << x << endl;
-        }
-        stb.update_val(a, b, x);
-        for(int i=a; i<b; ++i) {
-          w[i] = x;
-        }
-        break;
-      case 2:
-        r0 = stb.query_max(a, b);
-        r1 = (-1e18);
-        for(int i=a; i<b; ++i) {
-          if(r1 < v[i] + w[i]) r1 = v[i] + w[i];
-        }
-        if(show || r0 != r1) {
-          cout << "query max (" << a << ", " << b << ") : " << r0 << " " << r1 << endl;
-        }
-        break;
-      default:
-        continue;
+  while(1) {
+    int a, b, t;
+
+    if(ipt) {
+      for(int i=0; i<n; ++i) cin >> v[i];
+      for(int i=0; i<n; ++i) cin >> w[i];
+    } else {
+      for(int i=0; i<n; ++i) v[i] = val(mt);
+      for(int i=0; i<n; ++i) w[i] = val(mt);
     }
+    SegmentTree stb(n, v, w);
+    ll x, r0, r1;
+    int c = 0;
+    int limit = 2000;
+    if(ipt) {
+      cin >> limit;
+    }
+    bool show = true;
+    bool wrong = false;
+    while(c < limit && !wrong) {
+      if(ipt) {
+        cin >> t >> a >> b >> x;
+      } else {
+        t = rtype(mt);
+        a = gen(mt); b = gen(mt);
+        if(a == b) continue;
+        if(a > b) swap(a, b);
+        x = val(mt);
+      }
+
+      switch(t) {
+        case 0:
+          if(show) {
+            cout << "update min (" << a << ", " << b << ") = " << x << endl;
+          }
+          stb.update_min(a, b, x);
+          for(int i=a; i<b; ++i) {
+            if(x < v[i]) v[i] = x;
+          }
+          break;
+        case 1:
+          if(show) {
+            cout << "update val (" << a << ", " << b << ") = " << x << endl;
+          }
+          stb.update_val(a, b, x);
+          for(int i=a; i<b; ++i) {
+            w[i] = x;
+          }
+          break;
+        case 2:
+          r0 = stb.query_max(a, b);
+          r1 = (-1e18);
+          for(int i=a; i<b; ++i) {
+            if(r1 < v[i] + w[i]) r1 = v[i] + w[i];
+          }
+          if(show || r0 != r1) {
+            cout << "query max (" << a << ", " << b << ") : " << r0 << " " << r1 << endl;
+            if(r0 != r1) wrong = true;
+          }
+          break;
+        default:
+          continue;
+      }
+      ++c;
+    }
+    if(wrong || ipt) break;
   }
   return 0;
 }
