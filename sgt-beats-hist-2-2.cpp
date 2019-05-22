@@ -17,9 +17,13 @@ using ll = long long;
 class SegmentTree {
   const static ll inf = 1e18;
   int n0;
+
+  // 区間加算クエリ用
   ll len[4*N], ladd[4*N];
 
+  // a_i の最小値・二番目の最小値・最小値の個数
   ll min_v[4*N], smin_v[4*N], min_c[4*N];
+  // a_i の区間総和
   ll sum[4*N];
 
   struct MinVal {
