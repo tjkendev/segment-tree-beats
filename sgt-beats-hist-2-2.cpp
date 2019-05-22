@@ -19,59 +19,62 @@ class SegmentTree {
   int n0;
   ll len[4*N], ladd[4*N];
 
+  ll max_v[4*N], smax_v[4*N], max_c[4*N];
+  ll sum[4*N];
+
   struct MinVal {
-    ll m, sm, c, s;
+    ll min_v, smin_v, min_c, sum;
     ll m_hmax, nm_hmax;
 
     void init(ll x) {
-      m = 0; sm = inf; c = 1; s = 0;
+      min_v = 0; smin_v = inf; min_c = 1; sum = 0;
       m_hmax = x; nm_hmax = -inf;
     }
 
     void init_empty() {
-      m = sm = inf; c = 0; s = 0;
+      min_v = smin_v = inf; min_c = 0; sum = 0;
       m_hmax = nm_hmax = -inf;
     }
 
-    void update_min(ll x) {
-      if(m < x) {
-        s += (x - m) * c;
-        m_hmax += (x - m);
+    inline void update_min(ll x) {
+      if(min_v < x) {
+        sum += (x - min_v) * min_c;
+        m_hmax += (x - min_v);
 
-        m = x;
+        min_v = x;
       }
     }
 
-    void merge(MinVal &l, MinVal &r) {
-      s = l.s + r.s;
+    inline void merge(MinVal &l, MinVal &r) {
+      sum = l.sum + r.sum;
       nm_hmax = max(l.nm_hmax, r.nm_hmax);
 
-      if(l.m < r.m) {
-        sm = min(l.sm, r.m);
-        m = l.m;
-        c = l.c;
+      if(l.min_v < r.min_v) {
+        smin_v = min(l.smin_v, r.min_v);
+        min_v = l.min_v;
+        min_c = l.min_c;
 
         nm_hmax = max(nm_hmax, r.m_hmax);
         m_hmax = l.m_hmax;
-      } else if(l.m > r.m) {
-        sm = min(l.m, r.sm);
-        m = r.m;
-        c = r.c;
+      } else if(l.min_v > r.min_v) {
+        smin_v = min(l.min_v, r.smin_v);
+        min_v = r.min_v;
+        min_c = r.min_c;
 
         nm_hmax = max(nm_hmax, l.m_hmax);
         m_hmax = r.m_hmax;
       } else {
-        m = l.m;
-        sm = min(l.sm, r.sm);
-        c = l.c + r.c;
+        min_v = l.min_v;
+        smin_v = min(l.smin_v, r.smin_v);
+        min_c = l.min_c + r.min_c;
 
         m_hmax = max(l.m_hmax, r.m_hmax);
       }
     }
 
     void add(ll x) {
-      if(m != inf) m += x;
-      if(sm != inf) sm += x;
+      if(min_v != inf) min_v += x;
+      if(smin_v != inf) smin_v += x;
     }
 
     ll hmax() const {
@@ -79,29 +82,25 @@ class SegmentTree {
     }
   };
 
-  MinVal dmin[4*N], dmin2[4*N];
-
-  ll max_v[4*N], smax_v[4*N];
-  ll max_c[4*N], sum[4*N];
+  MinVal min_d[4*N], nmin_d[4*N];
 
   void update_node_max(int k, ll x) {
     sum[k] += (x - max_v[k]) * max_c[k];
 
-    dmin[k].add(max_v[k] - x);
-    dmin[k].s += (max_v[k] - x) * max_c[k];
+    min_d[k].add(max_v[k] - x);
+    min_d[k].sum += (max_v[k] - x) * max_c[k];
 
     max_v[k] = x;
   }
 
   void addall(int k, ll a) {
-    //printf("addall %d %lld\n", k, a);
-    sum[k] += a * len[k];
     max_v[k] += a;
     if(smax_v[k] != -inf) smax_v[k] += a;
+    sum[k] += a * len[k];
 
-    dmin[k].add(-a); dmin2[k].add(-a);
-    dmin[k].s -= a * max_c[k];
-    dmin2[k].s -= a * (len[k] - max_c[k]);
+    min_d[k].add(-a); nmin_d[k].add(-a);
+    min_d[k].sum -= a * max_c[k];
+    nmin_d[k].sum -= a * (len[k] - max_c[k]);
 
     ladd[k] += a;
   }
@@ -123,48 +122,66 @@ class SegmentTree {
     }
 
     if(max_v[2*k+1] < max_v[2*k+2]) {
-      dmin[2*k+1].update_min(dmin2[k].m);
-      dmin[2*k+2].update_min(dmin[k].m);
+      min_d[2*k+1].update_min(nmin_d[k].min_v);
+      min_d[2*k+2].update_min(min_d[k].min_v);
     } else if(max_v[2*k+1] > max_v[2*k+2]) {
-      dmin[2*k+1].update_min(dmin[k].m);
-      dmin[2*k+2].update_min(dmin2[k].m);
+      min_d[2*k+1].update_min(min_d[k].min_v);
+      min_d[2*k+2].update_min(nmin_d[k].min_v);
     } else {
-      dmin[2*k+1].update_min(dmin[k].m);
-      dmin[2*k+2].update_min(dmin[k].m);
+      min_d[2*k+1].update_min(min_d[k].min_v);
+      min_d[2*k+2].update_min(min_d[k].min_v);
     }
 
-    dmin2[2*k+1].update_min(dmin2[k].m);
-    dmin2[2*k+2].update_min(dmin2[k].m);
+    nmin_d[2*k+1].update_min(nmin_d[k].min_v);
+    nmin_d[2*k+2].update_min(nmin_d[k].min_v);
   }
 
   void update(int k) {
     sum[k] = sum[2*k+1] + sum[2*k+2];
 
-    dmin2[k].merge(dmin2[2*k+1], dmin2[2*k+2]);
+    nmin_d[k].merge(nmin_d[2*k+1], nmin_d[2*k+2]);
 
     if(max_v[2*k+1] > max_v[2*k+2]) {
       max_v[k] = max_v[2*k+1];
       max_c[k] = max_c[2*k+1];
       smax_v[k] = max(smax_v[2*k+1], max_v[2*k+2]);
 
-      dmin[k] = dmin[2*k+1];
-      dmin2[k].merge(dmin2[k], dmin[2*k+2]);
+      min_d[k] = min_d[2*k+1];
+      nmin_d[k].merge(nmin_d[k], min_d[2*k+2]);
     } else if(max_v[2*k+1] < max_v[2*k+2]) {
       max_v[k] = max_v[2*k+2];
       max_c[k] = max_c[2*k+2];
       smax_v[k] = max(max_v[2*k+1], smax_v[2*k+2]);
 
-      dmin[k] = dmin[2*k+2];
-      dmin2[k].merge(dmin2[k], dmin[2*k+1]);
+      min_d[k] = min_d[2*k+2];
+      nmin_d[k].merge(nmin_d[k], min_d[2*k+1]);
     } else {
       max_v[k] = max_v[2*k+1];
       max_c[k] = max_c[2*k+1] + max_c[2*k+2];
       smax_v[k] = max(smax_v[2*k+1], smax_v[2*k+2]);
 
-      dmin[k].merge(dmin[2*k+1], dmin[2*k+2]);
+      min_d[k].merge(min_d[2*k+1], min_d[2*k+2]);
     }
   }
 
+  // 数列Dの更新: d_i <- max(d_i, 0)
+  void _update_dmax(int k, int l, int r) {
+    if(l == r || (0 <= min_d[k].min_v && 0 <= nmin_d[k].min_v)) {
+      return;
+    }
+    if(0 < min_d[k].smin_v && 0 < nmin_d[k].smin_v) {
+      min_d[k].update_min(0);
+      nmin_d[k].update_min(0);
+      return;
+    }
+
+    push(k);
+    _update_dmax(2*k+1, l, (l+r)/2);
+    _update_dmax(2*k+2, (l+r)/2, r);
+    update(k);
+  }
+
+  // 数列Aの更新: a_i <- min(a_i, x)
   void _update_min(ll x, int a, int b, int k, int l, int r) {
     if(b <= l || r <= a || max_v[k] <= x) {
       return;
@@ -181,26 +198,7 @@ class SegmentTree {
     update(k);
   }
 
-  void _update_dmax(int k, int l, int r) {
-    if(l == r || (0 <= dmin[k].m && 0 <= dmin2[k].m)) {
-      return;
-    }
-    if(0 < dmin[k].sm && 0 < dmin2[k].sm) {
-      if(0 < dmin[k].sm && dmin[k].m < 0) {
-        dmin[k].update_min(0);
-      }
-      if(0 < dmin2[k].sm && dmin2[k].m < 0) {
-        dmin2[k].update_min(0);
-      }
-      return;
-    }
-
-    push(k);
-    _update_dmax(2*k+1, l, (l+r)/2);
-    _update_dmax(2*k+2, (l+r)/2, r);
-    update(k);
-  }
-
+  // 数列Aの更新: a_i <- a_i + x
   void _add_val(ll x, int a, int b, int k, int l, int r) {
     if(b <= l || r <= a) {
       return;
@@ -216,6 +214,7 @@ class SegmentTree {
     update(k);
   }
 
+  // 数列Aのクエリ処理: max(a_i)
   ll _query_max(int a, int b, int k, int l, int r) {
     if(b <= l || r <= a) {
       return -inf;
@@ -229,12 +228,13 @@ class SegmentTree {
     return max(lv, rv);
   }
 
+  // 数列A,Dのクエリ処理: sum(a_i + d_i)
   ll _query_hist_max_sum(int a, int b, int k, int l, int r) {
     if(b <= l || r <= a) {
       return 0;
     }
     if(a <= l && r <= b) {
-      return sum[k] + dmin[k].s + dmin2[k].s;
+      return sum[k] + min_d[k].sum + nmin_d[k].sum;
     }
     push(k);
     ll lv = _query_hist_max_sum(a, b, 2*k+1, l, (l+r)/2);
@@ -242,12 +242,13 @@ class SegmentTree {
     return lv + rv;
   }
 
+  // 数列A,Dのクエリ処理: max(a_i + d_i)
   ll _query_hist_max_max(int a, int b, int k, int l, int r) {
     if(b <= l || r <= a) {
       return -inf;
     }
     if(a <= l && r <= b) {
-      return max(dmin[k].hmax(), dmin2[k].hmax());
+      return max(min_d[k].hmax(), nmin_d[k].hmax());
     }
     push(k);
     ll lv = _query_hist_max_max(a, b, 2*k+1, l, (l+r)/2);
@@ -271,21 +272,21 @@ public:
       smax_v[n0-1+i] = -inf;
       max_c[n0-1+i] = 1;
 
-      dmin[n0-1+i].init(a[i]);
-      dmin2[n0-1+i].init_empty();
+      min_d[n0-1+i].init(a[i]);
+      nmin_d[n0-1+i].init_empty();
     }
     for(int i=n; i<n0; ++i) {
       sum[n0-1+i] = max_v[n0-1+i] = 0;
       smax_v[n0-1+i] = -inf;
       max_c[n0-1+i] = 0;
 
-      dmin[n0-1+i].init_empty();
-      dmin2[n0-1+i].init_empty();
+      min_d[n0-1+i].init_empty();
+      nmin_d[n0-1+i].init_empty();
     }
     for(int i=n0-2; i>=0; i--) update(i);
   }
 
-  ll update_min(int a, int b, ll x) {
+  void update_min(int a, int b, ll x) {
     _update_min(x, a, b, 0, 0, n0);
   }
 
@@ -310,8 +311,8 @@ public:
       printf("%d: ", k);
       printf("val = {%lld, %lld, %lld}, sum = %lld, Cmin = {%lld, %lld, %lld}, Cnmin = {%lld, %lld, %lld}, Csum = %lld, ladd = %lld\n",
           max_v[k], smax_v[k], max_c[k], sum[k],
-          dmin[k].m, dmin[k].sm, dmin[k].c,
-          dmin2[k].m, dmin2[k].sm, dmin2[k].c, dmin[k].s + dmin2[k].s,
+          min_d[k].min_v, min_d[k].smin_v, min_d[k].min_c,
+          nmin_d[k].min_v, nmin_d[k].smin_v, nmin_d[k].min_c, min_d[k].sum + nmin_d[k].sum,
           ladd[k]
           );
     }
@@ -324,11 +325,11 @@ int main() {
   random_device rnd;
   mt19937 mt(rnd());
   uniform_int_distribution<> szrnd(100, 1000);
-  int n = 128; //szrnd(mt);
+  int n = szrnd(mt);
   uniform_int_distribution<int> rtype(0, 4), gen(0, n);
   uniform_int_distribution<ll> val(-1e10, 1e10);
 
-  const int limit = 30000;
+  const int limit = 300000;
 
   while(1) {
     printf("===============================\nbegin\n");
