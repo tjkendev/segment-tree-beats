@@ -4,13 +4,13 @@
 using namespace std;
 using ll = long long;
 
-// Segment Tree Beats (Histric Information)
-// - i<=i<r について、 A_i の値を max(A_i, x) に更新
-// - l<=i<r について、 A_i の値に x を加える
-// - l<=i<r の中の A_i の最大値を求める
-// - l<=i<r の中の B_i の総和を求める
-// - l<=i<r の中の B_i の最大値を求める
-// - (各クエリ後、全てのiについて B_i = max(A_i, B_i))
+// Segment Tree Beats (Historic Information)
+// - i<=i<r について a_i の値を max(a_i, x) に更新
+// - l<=i<r について a_i の値に x を加える
+// - l<=i<r の中の a_i の最小値を求める
+// - l<=i<r の中の b_i の総和を求める
+// - l<=i<r の中の b_i の最大値を求める
+// - (各クエリ後、全てのiについて b_i = max(a_i, b_i))
 
 #define N 10003
 
@@ -19,7 +19,7 @@ class SegmentTree {
   int n0;
   ll len[4*N], ladd[4*N];
 
-  ll max_v[4*N], smax_v[4*N], max_c[4*N];
+  ll min_v[4*N], smin_v[4*N], min_c[4*N];
   ll sum[4*N];
 
   struct MinVal {
@@ -82,25 +82,29 @@ class SegmentTree {
     }
   };
 
+  //  min_d: a_i が最小値の i における d_i まわりの情報
+  // nmin_d: a_i が非最小値の i における d_i まわりの情報
   MinVal min_d[4*N], nmin_d[4*N];
 
-  void update_node_max(int k, ll x) {
-    sum[k] += (x - max_v[k]) * max_c[k];
 
-    min_d[k].add(max_v[k] - x);
-    min_d[k].sum += (max_v[k] - x) * max_c[k];
+  // a_i の最小値を x に更新する
+  void update_node_min(int k, ll x) {
+    sum[k] += (x - min_v[k]) * min_c[k];
 
-    max_v[k] = x;
+    min_d[k].add(min_v[k] - x);
+    min_d[k].sum += (min_v[k] - x) * min_c[k];
+
+    min_v[k] = x;
   }
 
   void addall(int k, ll a) {
-    max_v[k] += a;
-    if(smax_v[k] != -inf) smax_v[k] += a;
+    min_v[k] += a;
+    if(smin_v[k] != inf) smin_v[k] += a;
     sum[k] += a * len[k];
 
     min_d[k].add(-a); nmin_d[k].add(-a);
-    min_d[k].sum -= a * max_c[k];
-    nmin_d[k].sum -= a * (len[k] - max_c[k]);
+    min_d[k].sum -= a * min_c[k];
+    nmin_d[k].sum -= a * (len[k] - min_c[k]);
 
     ladd[k] += a;
   }
@@ -114,24 +118,26 @@ class SegmentTree {
       ladd[k] = 0;
     }
 
-    if(max_v[2*k+1] > max_v[k]) {
-      update_node_max(2*k+1, max_v[k]);
+    if(min_v[2*k+1] < min_v[k]) {
+      update_node_min(2*k+1, min_v[k]);
     }
-    if(max_v[2*k+2] > max_v[k]) {
-      update_node_max(2*k+2, max_v[k]);
+    if(min_v[2*k+2] < min_v[k]) {
+      update_node_min(2*k+2, min_v[k]);
     }
 
-    if(max_v[2*k+1] < max_v[2*k+2]) {
-      min_d[2*k+1].update_min(nmin_d[k].min_v);
-      min_d[2*k+2].update_min(min_d[k].min_v);
-    } else if(max_v[2*k+1] > max_v[2*k+2]) {
+    // a_i の最小値に d_i の最小値情報を伝搬
+    if(min_v[2*k+1] < min_v[2*k+2]) {
       min_d[2*k+1].update_min(min_d[k].min_v);
       min_d[2*k+2].update_min(nmin_d[k].min_v);
+    } else if(min_v[2*k+1] > min_v[2*k+2]) {
+      min_d[2*k+1].update_min(nmin_d[k].min_v);
+      min_d[2*k+2].update_min(min_d[k].min_v);
     } else {
       min_d[2*k+1].update_min(min_d[k].min_v);
       min_d[2*k+2].update_min(min_d[k].min_v);
     }
 
+    // a_i の非最小値に d_i の最小値情報を伝搬
     nmin_d[2*k+1].update_min(nmin_d[k].min_v);
     nmin_d[2*k+2].update_min(nmin_d[k].min_v);
   }
@@ -141,30 +147,30 @@ class SegmentTree {
 
     nmin_d[k].merge(nmin_d[2*k+1], nmin_d[2*k+2]);
 
-    if(max_v[2*k+1] > max_v[2*k+2]) {
-      max_v[k] = max_v[2*k+1];
-      max_c[k] = max_c[2*k+1];
-      smax_v[k] = max(smax_v[2*k+1], max_v[2*k+2]);
+    if(min_v[2*k+1] < min_v[2*k+2]) {
+      min_v[k] = min_v[2*k+1];
+      min_c[k] = min_c[2*k+1];
+      smin_v[k] = min(smin_v[2*k+1], min_v[2*k+2]);
 
       min_d[k] = min_d[2*k+1];
       nmin_d[k].merge(nmin_d[k], min_d[2*k+2]);
-    } else if(max_v[2*k+1] < max_v[2*k+2]) {
-      max_v[k] = max_v[2*k+2];
-      max_c[k] = max_c[2*k+2];
-      smax_v[k] = max(max_v[2*k+1], smax_v[2*k+2]);
+    } else if(min_v[2*k+1] > min_v[2*k+2]) {
+      min_v[k] = min_v[2*k+2];
+      min_c[k] = min_c[2*k+2];
+      smin_v[k] = min(min_v[2*k+1], smin_v[2*k+2]);
 
       min_d[k] = min_d[2*k+2];
       nmin_d[k].merge(nmin_d[k], min_d[2*k+1]);
     } else {
-      max_v[k] = max_v[2*k+1];
-      max_c[k] = max_c[2*k+1] + max_c[2*k+2];
-      smax_v[k] = max(smax_v[2*k+1], smax_v[2*k+2]);
+      min_v[k] = min_v[2*k+1];
+      min_c[k] = min_c[2*k+1] + min_c[2*k+2];
+      smin_v[k] = min(smin_v[2*k+1], smin_v[2*k+2]);
 
       min_d[k].merge(min_d[2*k+1], min_d[2*k+2]);
     }
   }
 
-  // 数列Dの更新: d_i <- max(d_i, 0)
+  // (内部用) d_i <- max(d_i, 0) で更新
   void _update_dmax(int k, int l, int r) {
     if(l == r || (0 <= min_d[k].min_v && 0 <= nmin_d[k].min_v)) {
       return;
@@ -181,24 +187,24 @@ class SegmentTree {
     update(k);
   }
 
-  // 数列Aの更新: a_i <- min(a_i, x)
-  void _update_min(ll x, int a, int b, int k, int l, int r) {
-    if(b <= l || r <= a || max_v[k] <= x) {
+  // 区間[a, b) の a_i を max(a_i, x) で更新
+  void _update_max(ll x, int a, int b, int k, int l, int r) {
+    if(b <= l || r <= a || x <= min_v[k]) {
       return;
     }
-    if(a <= l && r <= b && smax_v[k] < x) {
-      update_node_max(k, x);
+    if(a <= l && r <= b && x < smin_v[k]) {
+      update_node_min(k, x);
       _update_dmax(k, l, r);
       return;
     }
 
     push(k);
-    _update_min(x, a, b, 2*k+1, l, (l+r)/2);
-    _update_min(x, a, b, 2*k+2, (l+r)/2, r);
+    _update_max(x, a, b, 2*k+1, l, (l+r)/2);
+    _update_max(x, a, b, 2*k+2, (l+r)/2, r);
     update(k);
   }
 
-  // 数列Aの更新: a_i <- a_i + x
+  // 区間[a, b) の a_i に x を加算する
   void _add_val(ll x, int a, int b, int k, int l, int r) {
     if(b <= l || r <= a) {
       return;
@@ -214,22 +220,22 @@ class SegmentTree {
     update(k);
   }
 
-  // 数列Aのクエリ処理: max(a_i)
-  ll _query_max(int a, int b, int k, int l, int r) {
+  // 区間[a, b) における a_i の区間最小値を返す
+  ll _query_min(int a, int b, int k, int l, int r) {
     if(b <= l || r <= a) {
-      return -inf;
+      return inf;
     }
     if(a <= l && r <= b) {
-      return max_v[k];
+      return min_v[k];
     }
     push(k);
-    ll lv = _query_max(a, b, 2*k+1, l, (l+r)/2);
-    ll rv = _query_max(a, b, 2*k+2, (l+r)/2, r);
-    return max(lv, rv);
+    ll lv = _query_min(a, b, 2*k+1, l, (l+r)/2);
+    ll rv = _query_min(a, b, 2*k+2, (l+r)/2, r);
+    return min(lv, rv);
   }
 
-  // 数列A,Dのクエリ処理: sum(a_i + d_i)
-  ll _query_hist_max_sum(int a, int b, int k, int l, int r) {
+  // 区間[a, b) における historic maximal value の区間総和を返す
+  ll _query_hmax_sum(int a, int b, int k, int l, int r) {
     if(b <= l || r <= a) {
       return 0;
     }
@@ -237,13 +243,13 @@ class SegmentTree {
       return sum[k] + min_d[k].sum + nmin_d[k].sum;
     }
     push(k);
-    ll lv = _query_hist_max_sum(a, b, 2*k+1, l, (l+r)/2);
-    ll rv = _query_hist_max_sum(a, b, 2*k+2, (l+r)/2, r);
+    ll lv = _query_hmax_sum(a, b, 2*k+1, l, (l+r)/2);
+    ll rv = _query_hmax_sum(a, b, 2*k+2, (l+r)/2, r);
     return lv + rv;
   }
 
-  // 数列A,Dのクエリ処理: max(a_i + d_i)
-  ll _query_hist_max_max(int a, int b, int k, int l, int r) {
+  // 区間[a, b) における historic maximal value の区間最大値を返す
+  ll _query_hmax_max(int a, int b, int k, int l, int r) {
     if(b <= l || r <= a) {
       return -inf;
     }
@@ -251,8 +257,8 @@ class SegmentTree {
       return max(min_d[k].hmax(), nmin_d[k].hmax());
     }
     push(k);
-    ll lv = _query_hist_max_max(a, b, 2*k+1, l, (l+r)/2);
-    ll rv = _query_hist_max_max(a, b, 2*k+2, (l+r)/2, r);
+    ll lv = _query_hmax_max(a, b, 2*k+1, l, (l+r)/2);
+    ll rv = _query_hmax_max(a, b, 2*k+2, (l+r)/2, r);
     return max(lv, rv);
   }
 
@@ -268,17 +274,17 @@ public:
     }
 
     for(int i=0; i<n; ++i) {
-      max_v[n0-1+i] = sum[n0-1+i] = a[i];
-      smax_v[n0-1+i] = -inf;
-      max_c[n0-1+i] = 1;
+      min_v[n0-1+i] = sum[n0-1+i] = a[i];
+      smin_v[n0-1+i] = inf;
+      min_c[n0-1+i] = 1;
 
       min_d[n0-1+i].init(a[i]);
       nmin_d[n0-1+i].init_empty();
     }
     for(int i=n; i<n0; ++i) {
-      sum[n0-1+i] = max_v[n0-1+i] = 0;
-      smax_v[n0-1+i] = -inf;
-      max_c[n0-1+i] = 0;
+      sum[n0-1+i] = min_v[n0-1+i] = 0;
+      smin_v[n0-1+i] = inf;
+      min_c[n0-1+i] = 0;
 
       min_d[n0-1+i].init_empty();
       nmin_d[n0-1+i].init_empty();
@@ -286,31 +292,36 @@ public:
     for(int i=n0-2; i>=0; i--) update(i);
   }
 
-  void update_min(int a, int b, ll x) {
-    _update_min(x, a, b, 0, 0, n0);
+  // i<=i<r について a_i の値を max(a_i, x) に更新
+  void update_max(int a, int b, ll x) {
+    _update_max(x, a, b, 0, 0, n0);
   }
 
+  // l<=i<r について a_i の値に x を加える
   void add_val(int a, int b, ll x) {
     _add_val(x, a, b, 0, 0, n0);
   }
 
+  // l<=i<r の中の b_i の区間総和を求める
   ll query_hmax_sum(int a, int b) {
-    return _query_hist_max_sum(a, b, 0, 0, n0);
+    return _query_hmax_sum(a, b, 0, 0, n0);
   }
 
+  // l<=i<r の中の b_i の区間最大値を求める
   ll query_hmax_max(int a, int b) {
-    return _query_hist_max_max(a, b, 0, 0, n0);
+    return _query_hmax_max(a, b, 0, 0, n0);
   }
 
-  ll query_max(int a, int b) {
-    return _query_max(a, b, 0, 0, n0);
+  // l<=i<r の中の a_i の区間最小値を求める
+  ll query_min(int a, int b) {
+    return _query_min(a, b, 0, 0, n0);
   }
 
   void debug() {
     for(int k=0; k<2*n0-1; ++k) {
       printf("%d: ", k);
       printf("val = {%lld, %lld, %lld}, sum = %lld, Cmin = {%lld, %lld, %lld}, Cnmin = {%lld, %lld, %lld}, Csum = %lld, ladd = %lld\n",
-          max_v[k], smax_v[k], max_c[k], sum[k],
+          min_v[k], smin_v[k], min_c[k], sum[k],
           min_d[k].min_v, min_d[k].smin_v, min_d[k].min_c,
           nmin_d[k].min_v, nmin_d[k].smin_v, nmin_d[k].min_c, min_d[k].sum + nmin_d[k].sum,
           ladd[k]
@@ -358,11 +369,11 @@ int main() {
           }
           break;
         case 1:
-          printf("%d: query_max (%d, %d)\n", c, a, b);
-          r0 = stb.query_max(a, b);
-          r1 = -1e18;
+          printf("%d: query_min (%d, %d)\n", c, a, b);
+          r0 = stb.query_min(a, b);
+          r1 = 1e18;
           for(int i=a; i<b; ++i) {
-            r1 = max(r1, v[i]);
+            r1 = min(r1, v[i]);
           }
           if(r0 != r1) {
             printf("query max (%d, %d) : result is %lld, expected is %lld\n", a, b, r0, r1);
@@ -382,10 +393,11 @@ int main() {
           }
           break;
         case 3:
-          printf("%d: update_min (%d, %d)\n", c, a, b);
-          stb.update_min(a, b, x);
+          printf("%d: update_max (%d, %d) : %lld\n", c, a, b, x);
+          stb.update_max(a, b, x);
           for(int i=a; i<b; ++i) {
-            v[i] = min(v[i], x);
+            v[i] = max(v[i], x);
+            w[i] = max(w[i], v[i]);
           }
           break;
         case 4:
@@ -403,11 +415,16 @@ int main() {
         default:
           continue;
       }
-      //stb.debug();
       if(wrong) break;
+      //stb.debug();
       ++c;
     }
-    if(c <= limit) break;
+    if(c <= limit) {
+      for(int i=0; i<n; ++i) cout << v[i] << " "; cout << endl;
+      for(int i=0; i<n; ++i) cout << w[i] << " "; cout << endl;
+      stb.debug();
+      break;
+    }
   }
   return 0;
 }

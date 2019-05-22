@@ -6,35 +6,50 @@ using namespace std;
 using ll = long long;
 
 // Segment Tree Beats (Historic Information)
-// - l<=i<r について、 A_i の値に x を加える
-// - l<=i<r の中の A_i の最大値を求める
-// - l<=i<r の中の B_i の総和を求める
-// - l<=i<r の中の B_i の最大値を求める
-// - (各クエリ後、全てのiについて B_i = max(A_i, B_i))
+// - l<=i<r について a_i の値に x を加える
+// - l<=i<r の中の a_i の最大値を求める
+// - l<=i<r の中の b_i の総和を求める
+// - l<=i<r の中の b_i の最大値を求める
+// - (各クエリ後、全てのiについて b_i = max(a_i, b_i))
 
 #define N 10003
 
 class SegmentTree {
   static const ll inf = 1e18;
   int n0;
+
+  // cur_s : a_i の区間総和
+  // cur_ma: a_i の区間最大値
   ll cur_s[4*N], cur_ma[4*N];
 
+  // 区間加算クエリ用
   ll ladd[4*N], len[4*N];
 
+  // d_i の最小値まわりの情報を持つ構造体
   struct MinVal {
+    //  min_v: d_i の最小値
+    // smin_v: 二番目の最小値
+    //  min_c: 最小値の個数
+    //    sum: d_iの総和
     ll min_v, smin_v, min_c, sum;
+    //  m_hmax: d_i が最小値の a_i + d_i
+    // nm_hmax: d_i が非最小値の a_i + d_i
     ll m_hmax, nm_hmax;
 
+
+    // a_i の初期値が x の初期化処理
     void init(ll x) {
       min_v = 0; smin_v = inf; min_c = 1; sum = 0;
       m_hmax = x; nm_hmax = -inf;
     }
 
+    // a_i を使わない場合の初期化処理
     void init_empty() {
       min_v = smin_v = inf; min_c = 0; sum = 0;
       m_hmax = nm_hmax = -inf;
     }
 
+    // d_i の最小値を x に更新
     inline void update_min(ll x) {
       if(min_v < x) {
         sum += (x - min_v) * min_c;
@@ -44,6 +59,8 @@ class SegmentTree {
       }
     }
 
+    // 2つのノード l と r からこのノード情報を更新
+    // (片方に自身を指定して使っても問題ないようになっている)
     inline void merge(MinVal &l, MinVal &r) {
       sum = l.sum + r.sum;
       nm_hmax = max(l.nm_hmax, r.nm_hmax);
@@ -71,11 +88,13 @@ class SegmentTree {
       }
     }
 
+    // 最小値・二番目の最小値への加算処理
     void add(ll x) {
       if(min_v != inf) min_v += x;
       if(smin_v != inf) smin_v += x;
     }
 
+    // a_i + d_i の最大値を返す
     ll hmax() const {
       return max(m_hmax, nm_hmax);
     }
@@ -115,6 +134,7 @@ class SegmentTree {
     val_d[k].merge(val_d[2*k+1], val_d[2*k+2]);
   }
 
+  // (内部用) d_i <- max(d_i, 0) で更新
   void _update_dmax(int k, int l, int r) {
     if(l == r || 0 <= val_d[k].min_v) {
       return;
@@ -130,6 +150,7 @@ class SegmentTree {
     update(k);
   }
 
+  // 区間[a, b) の a_i に x を加算する
   void _add_val(ll x, int a, int b, int k, int l, int r) {
     if(b <= l || r <= a) {
       return;
@@ -145,6 +166,7 @@ class SegmentTree {
     update(k);
   }
 
+  // 区間[a, b) における a_i の区間最大値を返す
   ll _query_max(int a, int b, int k, int l, int r) {
     if(b <= l || r <= a) {
       return -inf;
@@ -158,7 +180,8 @@ class SegmentTree {
     return max(lv, rv);
   }
 
-  ll _query_hist_max_max(int a, int b, int k, int l, int r) {
+  // 区間[a, b) における historic maximal value の区間最大値を返す
+  ll _query_hmax_max(int a, int b, int k, int l, int r) {
     if(b <= l || r <= a) {
       return -inf;
     }
@@ -166,12 +189,13 @@ class SegmentTree {
       return val_d[k].hmax();
     }
     push(k);
-    ll lv = _query_hist_max_max(a, b, 2*k+1, l, (l+r)/2);
-    ll rv = _query_hist_max_max(a, b, 2*k+2, (l+r)/2, r);
+    ll lv = _query_hmax_max(a, b, 2*k+1, l, (l+r)/2);
+    ll rv = _query_hmax_max(a, b, 2*k+2, (l+r)/2, r);
     return max(lv, rv);
   }
 
-  ll _query_hist_max_sum(int a, int b, int k, int l, int r) {
+  // 区間[a, b) における historic maximal value の区間総和を返す
+  ll _query_hmax_sum(int a, int b, int k, int l, int r) {
     if(b <= l || r <= a) {
       return 0;
     }
@@ -179,8 +203,8 @@ class SegmentTree {
       return cur_s[k] + val_d[k].sum;
     }
     push(k);
-    ll lv = _query_hist_max_sum(a, b, 2*k+1, l, (l+r)/2);
-    ll rv = _query_hist_max_sum(a, b, 2*k+2, (l+r)/2, r);
+    ll lv = _query_hmax_sum(a, b, 2*k+1, l, (l+r)/2);
+    ll rv = _query_hmax_sum(a, b, 2*k+2, (l+r)/2, r);
     return lv + rv;
   }
 
@@ -203,18 +227,22 @@ public:
     for(int i=n0-2; i>=0; i--) update(i);
   }
 
+  // l<=i<r について a_i の値を a_i + x に更新
   void add_val(int a, int b, ll x) {
     _add_val(x, a, b, 0, 0, n0);
   }
 
+  // l<=i<r の中の b_i の区間総和
   ll query_hmax_sum(int a, int b) {
-    return _query_hist_max_sum(a, b, 0, 0, n0);
+    return _query_hmax_sum(a, b, 0, 0, n0);
   }
 
+  // l<=i<r の中の b_i の区間最大値
   ll query_hmax_max(int a, int b) {
-    return _query_hist_max_max(a, b, 0, 0, n0);
+    return _query_hmax_max(a, b, 0, 0, n0);
   }
 
+  // l<=i<r の中の a_i の区間最大値
   ll query_max(int a, int b) {
     return _query_max(a, b, 0, 0, n0);
   }
