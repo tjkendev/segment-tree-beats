@@ -6,17 +6,17 @@ using namespace std;
 using ll = long long;
 
 // Segment Tree Beats (Historic Information)
-// - i<=i<r について A_i の値を max(A_i, x) に更新
-// - i<=i<r について A_i の値を min(A_i, x) に更新
-// - l<=i<r について A_i の値に x を加える
-// - l<=i<r について A_i の値を x に更新
-// - l<=i<r の中の A_i の最大値を求める
-// - l<=i<r の中の A_i の最小値を求める
-// - l<=i<r の中の B_i の最大値を求める
-// - l<=i<r の中の B_i の総和を求める
-// - l<=i<r の中の C_i の最小値を求める
-// - l<=i<r の中の C_i の総和を求める
-// - (各クエリ後、全てのiについて B_i = max(A_i, B_i), C_i = min(A_i, C_i))
+// - i<=i<r について a_i の値を max(a_i, x) に更新
+// - i<=i<r について a_i の値を min(a_i, x) に更新
+// - l<=i<r について a_i の値に x を加える
+// - l<=i<r について a_i の値を x に更新
+// - l<=i<r の中の a_i の最大値を求める
+// - l<=i<r の中の a_i の最小値を求める
+// - l<=i<r の中の b_i の最大値を求める
+// - l<=i<r の中の b_i の総和を求める
+// - l<=i<r の中の c_i の最小値を求める
+// - l<=i<r の中の c_i の総和を求める
+// - (各クエリ後、全てのiについて b_i = max(a_i, b_i), c_i = min(a_i, c_i))
 
 #define N 5003
 
@@ -24,10 +24,10 @@ class SegmentTree {
   const static ll inf = 1e18;
 
   struct HistVal {
-    // historic maximal value
+    // historic maximal value b_i (b_i = a_i + d_i where d_i >= 0)
     ll min_v, smin_v, min_c, min_s;
     ll m_hmax, nm_hmax;
-    // historic minimal value
+    // historic minimal value c_i (c_i = a_i + d_i where d_i <= 0)
     ll max_v, smax_v, max_c, max_s;
     ll m_hmin, nm_hmin;
 
@@ -142,7 +142,7 @@ class SegmentTree {
     }
   };
 
-  int n, n0;
+  int n0;
   ll len[4*N], ladd[4*N];
 
   HistVal max_d[4*N], nval_d[4*N], min_d[4*N];
@@ -182,7 +182,6 @@ class SegmentTree {
   }
 
   void addall(int k, ll a) {
-    //printf("addall %d %lld\n", k, a);
     sum[k] += a * len[k];
     max_v[k] += a;
     if(smax_v[k] != -inf) smax_v[k] += a;
@@ -197,7 +196,28 @@ class SegmentTree {
     min_d[k].add(-a, min_c[k]);
 
     ladd[k] += a;
-    //printf("addall %d: max_d[k] = {%lld, %lld}, nval_d[k] = {%lld, %lld}\n", k, max_d[k].min_v, max_d[k].sv, nval_d[k].min_v, nval_d[k].sv);
+  }
+
+  void _push_hist(int p, int k) {
+    if(min_v[k] == min_v[p]) {
+      min_d[p].update(min_d[k]);
+    } else if(max_v[k] == min_v[p]) {
+      // min_v[p] == max_v[p] == max_v[k]
+      min_d[p].update(max_d[k]);
+    } else {
+      min_d[p].update(nval_d[k]);
+    }
+
+    if(max_v[k] == max_v[p]) {
+      max_d[p].update(max_d[k]);
+    } else if(min_v[k] == max_v[p]) {
+      // max_v[p] == min_v[p] == min_v[k]
+      max_d[p].update(min_d[k]);
+    } else {
+      max_d[p].update(nval_d[k]);
+    }
+
+    nval_d[p].update(nval_d[k]);
   }
 
   void push(int k) {
@@ -209,60 +229,21 @@ class SegmentTree {
       ladd[k] = 0;
     }
 
-    if(max_v[2*k+1] > max_v[k]) {
+    if(max_v[k] < max_v[2*k+1]) {
       update_node_max(2*k+1, max_v[k]);
     }
-    if(max_v[2*k+2] > max_v[k]) {
+    if(max_v[k] < max_v[2*k+2]) {
       update_node_max(2*k+2, max_v[k]);
     }
-    if(min_v[k] > min_v[2*k+1]) {
+    if(min_v[2*k+1] < min_v[k]) {
       update_node_min(2*k+1, min_v[k]);
     }
-    if(min_v[k] > min_v[2*k+2]) {
+    if(min_v[2*k+2] < min_v[k]) {
       update_node_min(2*k+2, min_v[k]);
     }
 
-    // 2*k+1
-    if(min_v[k] == min_v[2*k+1]) {
-      min_d[2*k+1].update(min_d[k]);
-    } else if(max_v[k] == min_v[2*k+1]) {
-      // min_v[2*k+1] == max_v[2*k+1] == max_v[k]
-      min_d[2*k+1].update(max_d[k]);
-    } else {
-      min_d[2*k+1].update(nval_d[k]);
-    }
-
-    if(max_v[k] == max_v[2*k+1]) {
-      max_d[2*k+1].update(max_d[k]);
-    } else if(min_v[k] == max_v[2*k+1]) {
-      // max_v[2*k+1] == min_v[2*k+1] == min_v[k]
-      max_d[2*k+1].update(min_d[k]);
-    } else {
-      max_d[2*k+1].update(nval_d[k]);
-    }
-
-    nval_d[2*k+1].update(nval_d[k]);
-
-    // 2*k+2
-    if(min_v[k] == min_v[2*k+2]) {
-      min_d[2*k+2].update(min_d[k]);
-    } else if(max_v[k] == min_v[2*k+2]) {
-      // min_v[2*k+2] == max_v[2*k+2] == max_v[k]
-      min_d[2*k+2].update(max_d[k]);
-    } else {
-      min_d[2*k+2].update(nval_d[k]);
-    }
-
-    if(max_v[k] == max_v[2*k+2]) {
-      max_d[2*k+2].update(max_d[k]);
-    } else if(min_v[k] == max_v[2*k+2]) {
-      // max_v[2*k+2] == min_v[2*k+2] == min_v[k]
-      max_d[2*k+2].update(min_d[k]);
-    } else {
-      max_d[2*k+2].update(nval_d[k]);
-    }
-
-    nval_d[2*k+2].update(nval_d[k]);
+    _push_hist(2*k+1, k);
+    _push_hist(2*k+2, k);
   }
 
   void update(int k) {
@@ -270,20 +251,20 @@ class SegmentTree {
 
     nval_d[k].merge(nval_d[2*k+1], nval_d[2*k+2]);
 
-    max_v[k] = max(max_v[2*k+1], max_v[2*k+2]);
-    min_v[k] = min(min_v[2*k+1], min_v[2*k+2]);
-
     if(max_v[2*k+1] > max_v[2*k+2]) {
+      max_v[k] = max_v[2*k+1];
       max_c[k] = max_c[2*k+1];
       smax_v[k] = max(smax_v[2*k+1], max_v[2*k+2]);
 
       max_d[k] = max_d[2*k+1];
     } else if(max_v[2*k+1] < max_v[2*k+2]) {
+      max_v[k] = max_v[2*k+2];
       max_c[k] = max_c[2*k+2];
       smax_v[k] = max(max_v[2*k+1], smax_v[2*k+2]);
 
       max_d[k] = max_d[2*k+2];
     } else {
+      max_v[k] = max_v[2*k+1];
       max_c[k] = max_c[2*k+1] + max_c[2*k+2];
       smax_v[k] = max(smax_v[2*k+1], smax_v[2*k+2]);
 
@@ -291,16 +272,19 @@ class SegmentTree {
     }
 
     if(min_v[2*k+1] < min_v[2*k+2]) {
+      min_v[k] = min_v[2*k+1];
       min_c[k] = min_c[2*k+1];
       smin_v[k] = min(smin_v[2*k+1], min_v[2*k+2]);
 
       min_d[k] = min_d[2*k+1];
     } else if(min_v[2*k+1] > min_v[2*k+2]) {
+      min_v[k] = min_v[2*k+2];
       min_c[k] = min_c[2*k+2];
       smin_v[k] = min(min_v[2*k+1], smin_v[2*k+2]);
 
       min_d[k] = min_d[2*k+2];
     } else {
+      min_v[k] = min_v[2*k+1];
       min_c[k] = min_c[2*k+1] + min_c[2*k+2];
       smin_v[k] = min(smin_v[2*k+1], smin_v[2*k+2]);
 
@@ -503,7 +487,7 @@ class SegmentTree {
   }
 
 public:
-  SegmentTree(int n, ll *a = nullptr) : n(n) {
+  SegmentTree(int n, ll *a) {
     n0 = 1;
     while(n0 < n) n0 <<= 1;
 
@@ -512,7 +496,7 @@ public:
     for(int i=0; i<n0-1; ++i) len[2*i+1] = len[2*i+2] = (len[i] >> 1);
 
     for(int i=0; i<n; ++i) {
-      max_v[n0-1+i] = min_v[n0-1+i] = sum[n0-1+i] = (a != nullptr ? a[i] : 0);
+      max_v[n0-1+i] = min_v[n0-1+i] = sum[n0-1+i] = a[i];
       smax_v[n0-1+i] = -inf; smin_v[n0-1+i] = inf;
       max_c[n0-1+i] = min_c[n0-1+i] = 1;
 
