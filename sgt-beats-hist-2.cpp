@@ -19,9 +19,6 @@ class SegmentTree {
   ll len[4*N];
   ll ladd[4*N];
 
-  struct MaxVal {
-    ll v, sv, c;
-  };
   struct MinVal {
     ll v, sv, c;
 
@@ -84,7 +81,6 @@ class SegmentTree {
   }
 
   void addall(int k, ll a) {
-    //printf("addall %d %lld\n", k, a);
     sum[k] += a * len[k];
     max_v[k] += a;
     if(smax_v[k] != -inf) smax_v[k] += a;
@@ -92,7 +88,6 @@ class SegmentTree {
     dmin[k].add(-a); dmin2[k].add(-a);
     dmin_s[k] -= a * len[k];
     ladd[k] += a;
-    //printf("addall %d: dmin[k] = {%lld, %lld}, dmin2[k] = {%lld, %lld}\n", k, dmin[k].v, dmin[k].sv, dmin2[k].v, dmin2[k].sv);
   }
 
   void push(int k) {
