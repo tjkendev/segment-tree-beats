@@ -10,17 +10,15 @@ using ll = long long;
 // - l<=i<r の中の A_i の最大値を求める
 // - l<=i<r の中の A_i の最小値を求める
 // - l<=i<r の A_i の和を求める
-// - l<=i<r について、 A_i の値に x を加える
 
 #define N 10003
 
-class SegmentTreeBeats {
+class SegmentTree {
   const ll inf = 1e18;
   int n, n0;
   ll max_v[4*N], smax_v[4*N], max_c[4*N];
   ll min_v[4*N], smin_v[4*N], min_c[4*N];
   ll sum[4*N];
-  ll ecnt[4*N], ladd[4*N];
 
   void update_node_max(int k, ll x) {
     sum[k] += (x - max_v[k]) * max_c[k];
@@ -46,13 +44,6 @@ class SegmentTreeBeats {
   }
 
   void push(int k) {
-
-    if(ladd[k]) {
-      addall(2*k+1, ladd[k]);
-      addall(2*k+2, ladd[k]);
-      ladd[k] = 0;
-    }
-
     if(max_v[k] < max_v[2*k+1]) {
       update_node_max(2*k+1, max_v[k]);
     }
@@ -130,29 +121,6 @@ class SegmentTreeBeats {
     update(k);
   }
 
-  void addall(int k, ll x) {
-    max_v[k] += x; smax_v[k] += x;
-    min_v[k] += x; smin_v[k] += x;
-
-    sum[k] += ecnt[k] * x;
-    ladd[k] += x;
-  }
-
-  void _add(ll x, int a, int b, int k, int l, int r) {
-    if(b <= l || r <= a) {
-      return;
-    }
-    if(a <= l && r <= b) {
-      addall(k, x);
-      return;
-    }
-
-    push(k);
-    _add(x, a, b, 2*k+1, l, (l+r)/2);
-    _add(x, a, b, 2*k+2, (l+r)/2, r);
-    update(k);
-  }
-
   ll _query_max(int a, int b, int k, int l, int r) {
     if(b <= l || r <= a) {
       return -inf;
@@ -193,56 +161,34 @@ class SegmentTreeBeats {
   }
 
 public:
-  SegmentTreeBeats(int n) {
-    SegmentTreeBeats(n, nullptr);
+  SegmentTree(int n) {
+    SegmentTree(n, nullptr);
   }
 
-  SegmentTreeBeats(int n, ll *a) : n(n) {
+  SegmentTree(int n, ll *a) : n(n) {
     n0 = 1;
     while(n0 < n) n0 <<= 1;
 
-    if(a != nullptr) {
-      for(int i=0; i<n; ++i) {
-        max_v[n0-1+i] = min_v[n0-1+i] = sum[n0-1+i] = a[i];
-        smax_v[n0-1+i] = -inf;
-        smin_v[n0-1+i] = inf;
-        max_c[n0-1+i] = min_c[n0-1+i] = 1;
-
-        ecnt[n0-1+i] = 1; ladd[n0-1+i] = 0;
-      }
-    } else {
-      for(int i=n; i<n0; ++i) {
-        max_v[n0-1+i] = min_v[n0-1+i] = sum[n0-1+i] = 0;
-        smax_v[n0-1+i] = -inf;
-        smin_v[n0-1+i] = inf;
-        max_c[n0-1+i] = min_c[n0-1+i] = 1;
-
-        ecnt[n0-1+i] = 1; ladd[n0-1+i] = 0;
-      }
+    for(int i=0; i<n; ++i) {
+      max_v[n0-1+i] = min_v[n0-1+i] = sum[n0-1+i] = (a != nullptr ? a[i] : 0);
+      smax_v[n0-1+i] = -inf;
+      smin_v[n0-1+i] = inf;
+      max_c[n0-1+i] = min_c[n0-1+i] = 1;
     }
     for(int i=n; i<n0; ++i) {
-      max_v[n0-1+i] = smax_v[n0-1+i] = 0;
-      min_v[n0-1+i] = smin_v[n0-1+i] = 0;
+      max_v[n0-1+i] = smax_v[n0-1+i] = -inf;
+      min_v[n0-1+i] = smin_v[n0-1+i] = inf;
       max_c[n0-1+i] = min_c[n0-1+i] = 0;
-
-      ecnt[n0-1+i] = ladd[n0-1+i] = 0;
     }
-    for(int i=n0-2; i>=0; i--) {
-      update(i);
-      ecnt[i] = ecnt[2*i+1] + ecnt[2*i+2];
-    }
+    for(int i=n0-2; i>=0; i--) update(i);
   }
 
   void update_min(int a, int b, ll x) {
-    _update_min(x, a, b, 0, 0, n0);
+    return _update_min(x, a, b, 0, 0, n0);
   }
 
   void update_max(int a, int b, ll x) {
-    _update_max(x, a, b, 0, 0, n0);
-  }
-
-  void add(int a, int b, ll x) {
-    _add(x, a, b, 0, 0, n0);
+    return _update_max(x, a, b, 0, 0, n0);
   }
 
   ll query_max(int a, int b) {
@@ -265,11 +211,11 @@ int main() {
   mt19937 mt(rnd());
   uniform_int_distribution<> szrnd(1000, 10000);
   int n = szrnd(mt);
-  uniform_int_distribution<int> rtype(0, 5), gen(0, n);
-  uniform_int_distribution<ll> val(0, 1e10);
+  uniform_int_distribution<int> rtype(0, 4), gen(0, n);
+  uniform_int_distribution<ll> val(-1e10, 1e10);
 
   for(int i=0; i<n; ++i) v[i] = val(mt);
-  SegmentTreeBeats stb(n, v);
+  SegmentTree stb(n, v);
   int a, b;
   ll x, r0, r1;
   int c = 0;
@@ -301,7 +247,7 @@ int main() {
         break;
       case 2:
         r0 = stb.query_max(a, b);
-        r1 = 0;
+        r1 = (-1e18);
         for(int i=a; i<b; ++i) {
           if(r1 < v[i]) r1 = v[i];
         }
@@ -327,15 +273,6 @@ int main() {
         }
         if(show || r0 != r1) {
           cout << "query sum (" << a << ", " << b << ") : " << r0 << " " << r1 << endl;
-        }
-        break;
-      case 5:
-        stb.add(a, b, x);
-        for(int i=a; i<b; ++i) {
-          v[i] += x;
-        }
-        if(show) {
-          cout << "add " << x << " to (" << a << ", " << b << ")" << endl;
         }
         break;
     }

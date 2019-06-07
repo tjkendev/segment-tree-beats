@@ -5,30 +5,28 @@ using namespace std;
 using ll = long long;
 
 // Segment Tree Beats
-// - l<=i<r について a_i の値を min(a_i, x) に更新
-// - l<=i<r について a_i の値を max(a_i, x) に更新
-// - l<=i<r について a_i の値を a_i+x に更新
-// - l<=i<r の b_i の和を求める
+// - l<=i<r について、 A_i の値を min(A_i, x) に更新
+// - l<=i<r について、 A_i の値を max(A_i, x) に更新
+// - l<=i<r の中の A_i の最大値を求める
+// - l<=i<r の中の A_i の最小値を求める
+// - l<=i<r の A_i の和を求める
+// - l<=i<r の B_i の和を求める
 //
-// 各クエリで、a_i が変化した場合に b_i に1加算する
+// 各クエリで、A_i が変化した場合に B_i に1加算する
 
 #define N 10003
 
-class SegmentTreeBeats {
+class SegmentTree {
   const ll inf = 1e18;
   int n, n0;
   ll max_v[4*N], smax_v[4*N], max_c[4*N];
   ll min_v[4*N], smin_v[4*N], min_c[4*N];
-
-  ll len[4*N];  // len[k]: ノードkに含まれる要素数
-  ll ladd[4*N]; // ladd[k]: 区間加算クエリによって発生する区間加算遅延値
-
-  ll sum_b[4*N]; // b_i の区間総和
-  ll min_a[4*N]; // a_i が最小値の b_i に加算するlazy value (区間chmaxクエリ用)
-  ll max_a[4*N]; // a_i が最大値の b_i に加算するlazy value (区間chminクエリ用)
-  ll all_a[4*N]; // 区間内の b_i 全てに加算するlazy value (区間加算クエリ用)
+  ll sum[4*N];
+  ll sum_b[4*N], min_a[4*N], max_a[4*N];
 
   void update_node_max(int k, ll x) {
+    sum[k] += (x - max_v[k]) * max_c[k];
+
     if(max_v[k] == min_v[k]) {
       max_v[k] = min_v[k] = x;
     } else if(max_v[k] == smin_v[k]) {
@@ -38,6 +36,8 @@ class SegmentTreeBeats {
     }
   }
   void update_node_min(int k, ll x) {
+    sum[k] += (x - min_v[k]) * min_c[k];
+
     if(max_v[k] == min_v[k]) {
       max_v[k] = min_v[k] = x;
     } else if(smax_v[k] == min_v[k]) {
@@ -47,41 +47,19 @@ class SegmentTreeBeats {
     }
   }
 
-  // 親ノードpの最大値・最小値の状態を元に子ノードkの b_i の区間総和を更新
-  // lazy valueの伝搬
-  void add_b(int p, int k, ll mi, ll ma, ll aa) {
-    // 親ノードpの最小値とノードkの最小値が等しい場合のみ更新と伝搬を行う
+  void add_b(int p, int k, ll mi, ll ma) {
     if(p == -1 || min_v[p] == min_v[k]) {
-      // S_B への加算
       sum_b[k] += mi * min_c[k];
       min_a[k] += mi;
     }
 
-    // 親ノードpの最大値とノードkの最大値が等しい場合のみ更新と伝搬を行う
     if(p == -1 || max_v[p] == max_v[k]) {
-      // S_A への加算
       sum_b[k] += ma * max_c[k];
       max_a[k] += ma;
     }
-
-    // 全体(S_A + S_B + S_C)に加算する値の伝搬
-    sum_b[k] += aa * len[k];
-    all_a[k] += aa;
-  }
-
-  void addall(int k, ll x) {
-    max_v[k] += x; smax_v[k] += x;
-    min_v[k] += x; smin_v[k] += x;
-    ladd[k] += x;
   }
 
   void push(int k) {
-    if(ladd[k]) {
-      addall(2*k+1, ladd[k]);
-      addall(2*k+2, ladd[k]);
-      ladd[k] = 0;
-    }
-
     if(max_v[k] < max_v[2*k+1]) {
       update_node_max(2*k+1, max_v[k]);
     }
@@ -96,17 +74,16 @@ class SegmentTreeBeats {
       update_node_min(2*k+2, min_v[k]);
     }
 
-    // 子ノードの最小値/最大値を更新した後に区間総和を更新
-    if(min_a[k] != 0 || max_a[k] != 0 || all_a[k] != 0) {
-      add_b(k, 2*k+1, min_a[k], max_a[k], all_a[k]);
-      add_b(k, 2*k+2, min_a[k], max_a[k], all_a[k]);
+    if(min_a[k] != 0 || max_a[k] != 0) {
+      add_b(k, 2*k+1, min_a[k], max_a[k]);
+      add_b(k, 2*k+2, min_a[k], max_a[k]);
 
-      min_a[k] = max_a[k] = all_a[k] = 0;
+      min_a[k] = max_a[k] = 0;
     }
   }
 
   void update(int k) {
-    // b_i の区間総和の値を子ノードから計算し直す
+    sum[k] = sum[2*k+1] + sum[2*k+2];
     sum_b[k] = sum_b[2*k+1] + sum_b[2*k+2];
 
     if(max_v[2*k+1] < max_v[2*k+2]) {
@@ -143,7 +120,7 @@ class SegmentTreeBeats {
       return;
     }
     if(a <= l && r <= b && smax_v[k] < x) {
-      add_b(-1, k, 0, 1, 0);
+      add_b(-1, k, 0, 1);
       update_node_max(k, x);
       return;
     }
@@ -159,7 +136,7 @@ class SegmentTreeBeats {
       return;
     }
     if(a <= l && r <= b && x < smin_v[k]) {
-      add_b(-1, k, 1, 0, 0);
+      add_b(-1, k, 1, 0);
       update_node_min(k, x);
       return;
     }
@@ -170,19 +147,30 @@ class SegmentTreeBeats {
     update(k);
   }
 
-  void _add_val(ll x, int a, int b, int k, int l, int r) {
+  ll _query_max(int a, int b, int k, int l, int r) {
     if(b <= l || r <= a) {
-      return;
+      return -inf;
     }
     if(a <= l && r <= b) {
-      add_b(-1, k, 0, 0, 1);
-      addall(k, x);
-      return;
+      return max_v[k];
     }
     push(k);
-    _add_val(x, a, b, 2*k+1, l, (l+r)/2);
-    _add_val(x, a, b, 2*k+2, (l+r)/2, r);
-    update(k);
+    ll lv = _query_max(a, b, 2*k+1, l, (l+r)/2);
+    ll rv = _query_max(a, b, 2*k+2, (l+r)/2, r);
+    return max(lv, rv);
+  }
+
+  ll _query_min(int a, int b, int k, int l, int r) {
+    if(b <= l || r <= a) {
+      return inf;
+    }
+    if(a <= l && r <= b) {
+      return min_v[k];
+    }
+    push(k);
+    ll lv = _query_min(a, b, 2*k+1, l, (l+r)/2);
+    ll rv = _query_min(a, b, 2*k+2, (l+r)/2, r);
+    return min(lv, rv);
   }
 
   ll _query_sum(int a, int b, int k, int l, int r) {
@@ -190,7 +178,7 @@ class SegmentTreeBeats {
       return 0;
     }
     if(a <= l && r <= b) {
-      return sum_b[k];
+      return sum[k];
     }
     push(k);
     ll lv = _query_sum(a, b, 2*k+1, l, (l+r)/2);
@@ -198,21 +186,34 @@ class SegmentTreeBeats {
     return lv + rv;
   }
 
+  ll _query_sum_b(int a, int b, int k, int l, int r) {
+    if(b <= l || r <= a) {
+      return 0;
+    }
+    if(a <= l && r <= b) {
+      return sum_b[k];
+    }
+    push(k);
+    ll lv = _query_sum_b(a, b, 2*k+1, l, (l+r)/2);
+    ll rv = _query_sum_b(a, b, 2*k+2, (l+r)/2, r);
+    return lv + rv;
+  }
+
 public:
-  SegmentTreeBeats(int n, ll *a) : n(n) {
+  SegmentTree(int n) {
+    SegmentTree(n, nullptr);
+  }
+
+  SegmentTree(int n, ll *a) : n(n) {
     n0 = 1;
     while(n0 < n) n0 <<= 1;
 
-    len[0] = n0;
-    for(int i=0; i<n0-1; ++i) len[2*i+1] = len[2*i+2] = (len[i] >> 1);
     for(int i=0; i<2*n0-1; ++i) {
-      min_a[i] = max_a[i] = all_a[i] = 0;
-      sum_b[i] = 0;
-      ladd[i] = 0;
+      min_a[i] = max_a[i] = sum_b[i] = 0;
     }
 
     for(int i=0; i<n; ++i) {
-      max_v[n0-1+i] = min_v[n0-1+i] = a[i];
+      max_v[n0-1+i] = min_v[n0-1+i] = sum[n0-1+i] = (a != nullptr ? a[i] : 0);
       smax_v[n0-1+i] = -inf;
       smin_v[n0-1+i] = inf;
       max_c[n0-1+i] = min_c[n0-1+i] = 1;
@@ -225,25 +226,41 @@ public:
     for(int i=n0-2; i>=0; i--) update(i);
   }
 
-  // 区間[a, b) について a_i の値を min(a_i, x) に更新
   void update_min(int a, int b, ll x) {
     return _update_min(x, a, b, 0, 0, n0);
   }
 
-  // 区間[a, b) について a_i の値を max(a_i, x) に更新
   void update_max(int a, int b, ll x) {
     return _update_max(x, a, b, 0, 0, n0);
   }
 
-  // 区間[a, b) について a_i の値を a_i+x に更新
-  void add_val(int a, int b, ll x) {
-    if(!x) return;
-    _add_val(x, a, b, 0, 0, n0);
+  ll query_max(int a, int b) {
+    return _query_max(a, b, 0, 0, n0);
   }
 
-  // 区間[a, b) の b_i の総和を求める
+  ll query_min(int a, int b) {
+    return _query_min(a, b, 0, 0, n0);
+  }
+
   ll query_sum(int a, int b) {
     return _query_sum(a, b, 0, 0, n0);
+  }
+
+  ll query_sum_b(int a, int b) {
+    return _query_sum_b(a, b, 0, 0, n0);
+  }
+
+  // デバッグ用
+  void debug() {
+    printf("*******************\n");
+    for(int k=0; k<2*n0-1; ++k) {
+      printf("%d: ", k);
+      printf("max = {%lld, %lld, %lld}, min = {%lld, %lld, %lld}, sum = %lld, max_a = %lld, min_a = %lld, sum_b = %lld\n",
+          max_v[k], smax_v[k], max_c[k],
+          min_v[k], smin_v[k], min_c[k], sum[k],
+          max_a[k], min_a[k], sum_b[k]
+          );
+    }
   }
 };
 
@@ -254,7 +271,7 @@ int main() {
   mt19937 mt(rnd());
   uniform_int_distribution<> szrnd(1000, 10000);
   int n = szrnd(mt);
-  uniform_int_distribution<int> rtype(0, 3), gen(0, n);
+  uniform_int_distribution<int> rtype(0, 5), gen(0, n);
   uniform_int_distribution<ll> val(-1e10, 1e10);
 
   int limit = 20000;
@@ -265,10 +282,13 @@ int main() {
       printf("=================================\n");
     }
     for(int i=0; i<n; ++i) v[i] = val(mt), w[i] = 0;
-    SegmentTreeBeats stb(n, v);
+    SegmentTree stb(n, v);
     int a, b;
     ll x, r0, r1;
     int c = 0;
+    if(show && n <= 8) {
+      stb.debug();
+    }
     while(c < limit) {
       a = gen(mt); b = gen(mt);
       if(a == b) continue;
@@ -300,28 +320,52 @@ int main() {
           }
           break;
         case 2:
-          if(show) {
-            printf("add val (%d, %d): %lld\n", a, b, x);
-          }
-          stb.add_val(a, b, x);
+          r0 = stb.query_max(a, b);
+          r1 = (-1e18);
           for(int i=a; i<b; ++i) {
-            v[i] += x;
-            if(x) ++w[i];
+            if(r1 < v[i]) r1 = v[i];
+          }
+          if(show || r0 != r1) {
+            printf("query max (%d, %d): %lld %lld\n", a, b, r0, r1);
           }
           break;
         case 3:
+          r0 = stb.query_min(a, b);
+          r1 = (1e18);
+          for(int i=a; i<b; ++i) {
+            if(v[i] < r1) r1 = v[i];
+          }
+          if(show || r0 != r1) {
+            printf("query min (%d, %d): %lld %lld\n", a, b, r0, r1);
+          }
+          break;
+        case 4:
           r0 = stb.query_sum(a, b);
           r1 = 0;
           for(int i=a; i<b; ++i) {
-            r1 += w[i];
+            r1 += v[i];
           }
           if(show || r0 != r1) {
             printf("query sum (%d, %d): %lld %lld\n", a, b, r0, r1);
             wrong = (r0 != r1);
           }
           break;
+        case 5:
+          r0 = stb.query_sum_b(a, b);
+          r1 = 0;
+          for(int i=a; i<b; ++i) {
+            r1 += w[i];
+          }
+          if(show || r0 != r1) {
+            printf("query sum B (%d, %d): %lld %lld\n", a, b, r0, r1);
+            wrong = (r0 != r1);
+          }
+          break;
         default:
           continue;
+      }
+      if(show && n <= 8) {
+        stb.debug();
       }
       if(wrong) {
         break;

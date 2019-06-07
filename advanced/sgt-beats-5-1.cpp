@@ -13,7 +13,7 @@ using ll = long long;
 
 #define N 10003
 
-class SegmentTreeBeats {
+class SegmentTree {
   const ll inf = 1e18;
   int n, n0;
   ll max_v[4*N], smax_v[4*N], max_c[4*N];
@@ -160,7 +160,7 @@ class SegmentTreeBeats {
   }
 
 public:
-  SegmentTreeBeats(int n, ll *a) : n(n) {
+  SegmentTree(int n, ll *a) : n(n) {
     n0 = 1;
     while(n0 < n) n0 <<= 1;
 
@@ -214,7 +214,7 @@ int main() {
       printf("=================================\n");
     }
     for(int i=0; i<n; ++i) v[i] = val(mt), w[i] = 0;
-    SegmentTreeBeats stb(n, v);
+    SegmentTree stb(n, v);
     int a, b;
     ll x, r0, r1;
     int c = 0;
