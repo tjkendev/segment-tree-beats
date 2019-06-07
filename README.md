@@ -1,83 +1,26 @@
 # "Segment Tree Beats" の実装
 
-- 各プログラムで、ランダム生成されたクエリによるテストを実行します
-- 学習のための実装なので、無駄実装がちょこちょこあります
+- Segment Tree Beatsの実装です
+  - 試行錯誤して実装しています
+- ランダムに生成するクエリによって、データ構造が正しく実装されていることを保証しようとしてます
+  - 特定のケースに対して落ちる可能性が存在します
 
-## ソースコードの説明
+## ファイルの説明
 
-### 区間最大値(最小値)クエリ
+- `basic`: SGT Beatsの基本的な実装
+- `advanced`: 応用問題の実装
+- `hi-normal`: Historic Information を従来のセグ木で処理する実装
+- `hi-sgt-beats`: Historic Information をSegment Tree Beatsで処理する実装
 
-#### `sgt-beats-0-0.cpp`
+## 書いたブログ
 
-- range minimize query
-- range maximum query
-- range sum query
-
-計算量: O((N+M) log N)
-
-#### `sgt-beats-1.cpp`
-
-- range minimize query
-- range maximize query
-- range minimum query
-- range maximum query
-- range sum query
-
-計算量: O((N+M) log N)
-
-#### `sgt-beats-2.cpp`
-
-- range minimize query
-- range maximize query
-- range minimum query
-- range maximum query
-- range sum query
-- range add query
-
-計算量: O(N log N + M log^2 N)
-
-#### `sgt-beats-3.cpp`
-
-- range minimize query
-- range maximize query
-- range minimum query
-- range maximum query
-- range sum query
-- range add query
-- range update query
-
-計算量: O(N log N + M log^2 N)
-
-### 区間過去最大値(最小値)クエリ
-
-#### `sgt-hist-0.cpp`
-
-これは普通の遅延セグ木
-
-- range update query
-- range add query
-- range maximum query
-- range sum query
-- range historic maximum query
-
-計算量: O(M log N)
-
-#### `sgt-hist-1.cpp`
-
-これも普通の遅延セグ木
-
-- range update query
-- range add query
-- range maximum query
-- range minimum query
-- range sum query
-- range historic maximum query
-- range historic minimum query
-
-計算量: O(M log N)
+- [Segment Tree Beatsの実装メモ (基本まわり)](http://smijake3.hatenablog.com/entry/2019/04/28/021457)
+- [Segment Tree Beatsの実装メモ (応用的な例題まわり)](http://smijake3.hatenablog.com/entry/2019/05/18/145531)
+- [Segment Tree Beatsの実装メモ (Historic Informationまわり)](http://smijake3.hatenablog.com/entry/2019/06/07/013539)
 
 ## 参考
 
 - [A simple introduction to "Segment tree beats"](https://codeforces.com/blog/entry/57319)
 - [Segment Tree Beats - An introduction](http://codingwithrajarshi.blogspot.com/2018/03/segment-tree-beats-introduction.html)
 - [区间最值操作与历史最值问题](http://www.doc88.com/p-6744902151779.html)
+- [Segment Tree Beats!](http://ahwhlzz.is-programmer.com/2016/2/10/segmenttreebeats.195012.html)
