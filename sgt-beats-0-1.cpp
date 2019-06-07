@@ -10,6 +10,10 @@ using ll = long long;
 // - l<=i<r の中の A_i の最大値を求める
 // - l<=i<r の A_i の和を求める
 
+// 区間総和を最大値の更新差分で更新するのではなく、
+// a_i の最大値にのみ足す値を1つの lazy tag として実装したバージョン
+// (コード中の lazy_a がこれに該当)
+
 #define N 10003
 
 class SegmentTree {

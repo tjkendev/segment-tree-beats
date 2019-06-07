@@ -7,9 +7,9 @@
 
 ### 区間最大値(最小値)クエリ
 
-#### `sgt-beats-0.cpp`
+#### `sgt-beats-0-0.cpp`
 
-- range chmin query
+- range minimize query
 - range maximum query
 - range sum query
 
@@ -17,36 +17,36 @@
 
 #### `sgt-beats-1.cpp`
 
-- range chmin query
-- range chmax query
+- range minimize query
+- range maximize query
 - range minimum query
 - range maximum query
 - range sum query
 
-計算量: O((N+M) log^2 N)
+計算量: O((N+M) log N)
 
 #### `sgt-beats-2.cpp`
 
-- range chmin query
-- range chmax query
+- range minimize query
+- range maximize query
 - range minimum query
 - range maximum query
 - range sum query
 - range add query
 
-計算量: O((N+M) log^2 N)
+計算量: O(N log N + M log^2 N)
 
 #### `sgt-beats-3.cpp`
 
-- range chmin query
-- range chmax query
+- range minimize query
+- range maximize query
 - range minimum query
 - range maximum query
 - range sum query
 - range add query
 - range update query
 
-計算量: O((N+M) log^2 N)
+計算量: O(N log N + M log^2 N)
 
 ### 区間過去最大値(最小値)クエリ
 

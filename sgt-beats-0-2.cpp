@@ -4,12 +4,12 @@
 using namespace std;
 using ll = long long;
 
-// これは総和分割バージョン
-
 // Segment Tree Beats
 // - l<=i<r について、 a_i の値を min(a_i, x) に更新
 // - l<=i<r の中の a_i の最大値を求める
 // - l<=i<r の a_i の和を求める
+
+// 区間総和を a_i が最大値の時・非最大値の時で分割したバージョン
 
 #define N 10003
 
