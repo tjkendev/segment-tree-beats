@@ -7,6 +7,7 @@ using ll = long long;
 // Segment Tree Beats (Historic Information)
 // - l<=i<r について、 A_i の値に x を加える
 // - l<=i<r の中の A_i の最大値を求める
+// - l<=i<r の中の A_i の最小値を求める
 // - l<=i<r の中の B_i の総和を求める
 // - l<=i<r の中の C_i の総和を求める
 // - (各クエリ後、全てのiについて B_i = max(A_i, B_i))

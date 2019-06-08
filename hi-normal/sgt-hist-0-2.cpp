@@ -6,8 +6,9 @@ using namespace std;
 using ll = long long;
 
 // Segment Tree with Lazy Propagation (historic information)
-// - l<=i<r について a_i の値を max(a_i, x) に更新
+// - l<=i<r について、 a_i の値を x に更新
 // - l<=i<r について a_i の値に x を加える
+// - l<=i<r について a_i の値を min(a_i, x) に更新
 // - l<=i<r の中の a_i の最小値を求める
 // - l<=i<r の中の b_i の最小値を求める
 // - (各クエリ後、b_i は min(a_i, b_i) に更新)

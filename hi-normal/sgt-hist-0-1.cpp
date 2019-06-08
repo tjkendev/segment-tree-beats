@@ -8,6 +8,7 @@ using ll = long long;
 // Segment Tree with Lazy Propagation (historic information)
 // - l<=i<r について、 a_i の値を x に更新
 // - l<=i<r について、 a_i の値に x を加える
+// - l<=i<r について、 a_i の値に max(a_i, x) を加える
 // - l<=i<r の中の a_i の最大値を求める
 // - l<=i<r の中の b_i の最大値を求める
 // - (各クエリ後、b_i は max(a_i, b_i) に更新)
